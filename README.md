@@ -14,8 +14,4 @@ Geant4 Simulation of Polarimeter setup of COSY Storage Ring
 = 11. Apr. 2020. by Rahul Shankar = 
   - Triangular Bar Trackers added
     Front stack is fixed and rear stack is movable in the Y direction
-
-= 11. Apr. 2020. by Rahul Shankar = 
-  - Triangular Bar Trackers added
-    Front stack is fixed and rear stack is movable in the Y direction
   - Activated option to turn on/off dE Scintillators
