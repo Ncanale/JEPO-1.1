@@ -48,12 +48,14 @@ void BT2017EveAct::BeginOfEventAction(const G4Event* /*anEvent*/)
 //////////////////////////////////////////////////
 void BT2017EveAct::EndOfEventAction(const G4Event* anEvent)
 {
+  G4double NaN = std::numeric_limits<double>::quiet_NaN();
 	//std::cout << "monacemebis Sevseba " << std::endl;
 	// Get analysis manager
 	G4AnalysisManager* AM = G4AnalysisManager::Instance();
 
 	// Fill ntuple with result
-	G4int eID = m_prigenact -> GetGenEventID();
+	//G4int eID = m_prigenact -> GetGenEventID();
+	G4int eID = anEvent -> GetEventID();
 	AM -> FillNtupleIColumn(0, eID);
 
 	G4int iDet = 1;
@@ -76,7 +78,7 @@ void BT2017EveAct::EndOfEventAction(const G4Event* anEvent)
 	
 	// tracker bar filling
 	for(int i = 0; i < 28; i++)
-		AM -> FillNtupleDColumn(iDet++, m_EDepTr[i]);
+		AM -> FillNtupleDColumn(iDet++, (m_EDepTr[i] == 0.0 ? NaN : m_EDepTr[i]));
 	
 	AM -> FillNtupleDColumn(iDet++, xcoor);
 	

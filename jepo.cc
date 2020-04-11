@@ -51,12 +51,12 @@ void PrintHelp();
 //////////////////////////////////////////////////
 int main (int argc, char** argv)
 {
-	int option, flag_b = 0, flag_g = 0, flag_m = 0, flag_c = 0, flag_bz = 0, flag_by = 0, flag_ty = 0;
+	int option, flag_b = 0, flag_g = 0, flag_m = 0, flag_bz = 0, flag_by = 0, flag_ty = 0;
 
 	const char* optDic = "hbgm:c:z:y:t:"; // Option dictionary
 	
 	char * macro;
-    char * config = "../source/config.cfg";
+    const char * config = "../source/config.cfg";
 	
 	G4double GunZPos = 0;
 	G4double GunYPos = 0;
@@ -93,8 +93,7 @@ int main (int argc, char** argv)
                 macro = optarg;
                 break;
 
-            case 'c' :
-                flag_c = 1;
+      case 'c' :
                 config = optarg;
                 break;
 
@@ -180,11 +179,13 @@ int main (int argc, char** argv)
 	if ( !UI )
 	{	
 		// batch mode
-		G4UIsession* US = new G4UIterminal(new G4UItcsh);
 		if ( flag_m ) UM -> ApplyCommand( command + macro );
-		US -> SessionStart();
-
-		delete US;
+    else if ( flag_b )
+    {
+      G4UIsession* US = new G4UIterminal(new G4UItcsh);
+      US -> SessionStart();
+      delete US;
+    }
 	}
 
 	else

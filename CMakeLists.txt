@@ -71,6 +71,9 @@ set(JEPO_SCRIPTS
 	README
 	init_vis.mac
 	vis.mac
+	1M_event.mac
+	10k_event.mac
+	100k_event.mac	
 )
 
 foreach(_script ${JEPO_SCRIPTS})

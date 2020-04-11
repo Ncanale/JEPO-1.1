@@ -92,13 +92,15 @@ class BT2017ConMan
 	void SetTarPoY(G4double tarPoY);
 	G4double GetTarPoY() ;
 	// E scintilator
+	void SetUseSci(G4bool useSci);
+	G4bool GetUseSci();
 	void SetExpand(G4double expand);
 	G4double GetExpand();
   // Tracker Bars
 	void SetFixedColumn(G4bool fixCol);
-	G4double GetFixedColumn();
+	G4bool GetFixedColumn();
 	void SetMovingColumn(G4bool movCol);
-	G4double GetMovingColumn();
+	G4bool GetMovingColumn();
 	void SetTranslate(G4double translate);
 	G4double GetTranslate();
 	// Set & get configurations: Crystals
@@ -166,6 +168,7 @@ class BT2017ConMan
 	std::string m_STarPoX; G4double m_TarPoX;
 	std::string m_StarPoY; G4double m_TarPoY;
 	//	E scintilator
+	std::string m_SUseSci; G4bool m_UseSci;
 	std::string m_SSciEpx; G4double m_SciEpx;
   //  Tracker Bars
 	std::string m_SfixCol; G4bool m_fixCol;
