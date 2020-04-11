@@ -71,7 +71,7 @@ BT2017RunAct::~BT2017RunAct()
 //////////////////////////////////////////////////
 //   Begin of run action                        //
 //////////////////////////////////////////////////
-void BT2017RunAct::BeginOfRunAction(const G4Run* run)
+void BT2017RunAct::BeginOfRunAction(const G4Run* /*run*/)
 {
 	// All actions defined here will be excuted at the beginning of every run.
 	// What is a run? You may type "/run/beamOn [someNumber]".

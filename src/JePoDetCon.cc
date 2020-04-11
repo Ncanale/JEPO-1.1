@@ -289,7 +289,7 @@ G4VPhysicalVolume* JePoDetCon::Construct()
 			new G4PVPlacement(cryRot, kapPos[i], cryName[i]+"_kapPV", kapLV[i], labPV, false, 0);
 		}
 
-  /*
+  
 	// Plastic scintillator initialization
 	scintillator = new G4Box("scintillator", scXL/2, scYL/2,  scZL/2);
 
@@ -305,11 +305,11 @@ G4VPhysicalVolume* JePoDetCon::Construct()
 
 	// Place them
 	for( int i = 0; i < 4; i++)
-		if( sciIsConstructed[i]){
+		if( sciIsConstructed[i] && m_CM -> GetUseSci()){
 			pRot[i]->rotateZ(i * 90 * deg);
 			new G4PVPlacement(pRot[i], vector[i],  "LV_" + sciName[i], sciLV[i], labPV, false, 0);
 		}
-  */
+  
 
   // construct trackers
 	for( int i = 0; i < 28; i++)
@@ -602,7 +602,7 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   G4double iB = AlT/tanth + AlT/sinth;
   G4double iO = (iH - AlT) / 2;
 
-	// initialize logical volume
+	// Construct shape of detector and cover
   std::vector<G4TwoVector> tBar,tCover;
   tBar.push_back(G4TwoVector(0 , trH/2-iO));
   tBar.push_back(G4TwoVector(-trB/2 , iO-trH/2));
@@ -611,26 +611,29 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   tCover.push_back(G4TwoVector(-iB-trB/2 , -iO-AlT-trH/2));
   tCover.push_back(G4TwoVector(iB+trB/2 , -iO-AlT-trH/2));
   G4TwoVector off1(0,0), off2(0,0);
-	G4double scale1 = 1., scale2 = 1.;
-  tracker_bar = new G4ExtrudedSolid("tracker_bar",tBar,trL,off1,scale1,off2,scale2);
-  tracker_cover = new G4ExtrudedSolid("tracker_cover",tCover,trL,off1,scale1,off2,scale2);
+  tracker_bar = new G4ExtrudedSolid("tracker_bar",tBar,trL,off1,1.,off2,1.);
+  tracker_cover = new G4ExtrudedSolid("tracker_cover",tCover,trL,off1,1.,off2,1.);
+
+	// initialize logical volume
 	trLV[trID] = new G4LogicalVolume(tracker_cover, m_AlCoaMat, trName[trID]);
   tbarLV[trID] = new G4LogicalVolume(tracker_bar, m_CouMat, trName[trID] + "_bar");
-	trLV[trID]-> SetVisAttributes(new G4VisAttributes(G4Color(0.0, 1.0, 0.0, 0.2)));
-	tbarLV[trID]-> SetVisAttributes(new G4VisAttributes(G4Color(1.0, 1.0, 1.0, 0.05)));
+	trLV[trID]-> SetVisAttributes(new G4VisAttributes(G4Color(1.0, 1.0, 1.0, 0.2)));
+	tbarLV[trID]-> SetVisAttributes(new G4VisAttributes(G4Color(0.0, 1.0, 0.0, 0.05)));
+
+  // Put the bar in the cover
+	new G4PVPlacement(0, G4ThreeVector(), tbarLV[trID], trName[trID], trLV[trID], false, 0, 0);
 
 	// Define position of tracker
-  tRot[trID] = new G4RotationMatrix;
-  tRot[trID] -> rotateY(-M_PI/2);
-  tRot[trID] -> rotateZ(-M_PI/2);
-  tRot[trID] -> rotateX(-((trID / 7) % 2) * M_PI);
   G4double posX = 0 * mm;
 	G4double posY = (3.5 - (trID % 7) + ((trID / 7) % 2)*0.5) * (2*iB + trB) + (trID / 14) * translate;
   G4double posZ = detZ - (2 - (trID / 14))*(iH + trH + AlT + 1.0*mm) - 1.0*mm;
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   
-  // Put the bar in the cover
-	new G4PVPlacement(0, G4ThreeVector(), tbarLV[trID],  trName[trID], trLV[trID], false, 0, 0);
+	// Define rotation of tracker
+  tRot[trID] = new G4RotationMatrix;
+  tRot[trID] -> rotateY(-M_PI/2);
+  tRot[trID] -> rotateZ(-M_PI/2);
+  tRot[trID] -> rotateX(-((trID / 7) % 2) * M_PI);
 
 	// Done!
 	trIsConstructed[trID] = true;

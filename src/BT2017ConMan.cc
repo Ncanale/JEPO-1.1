@@ -77,6 +77,7 @@ void BT2017ConMan::SetDefault()
 	m_TarPoY =    0.0 * mm;
     
 	// Scintilator
+	m_UseSci = 	  false;
 	m_SciEpx = 	  630 * mm;
   
   // Tracker Bars
@@ -310,6 +311,14 @@ bool BT2017ConMan::Load(const char* fileName)
 			m_TarPoY = std::stod(m_StarPoY) * mm;
 		}
 		// E Scintilators
+		if ( StartsWith(line, "USEDESCINTILLATOR") )
+		{
+			char hfile[1000];
+			sscanf(line.data(), "USEDESCINTILLATOR %s", hfile);
+			m_SUseSci = hfile;
+			if      ( m_SUseSci == "ON"  ) m_UseSci = true;
+			else if ( m_SUseSci == "OFF" ) m_UseSci = false;
+		}
 		if ( StartsWith(line, "EXPAND") )
 		{
 			char hfile[1000];
@@ -477,6 +486,7 @@ void BT2017ConMan::PrintConfiguration()
 	printf(" BT2017ConMan::Load() => TARGETPOX    				%s\n", m_STarPoX.data());
 	printf(" BT2017ConMan::Load() => TARGETPOY    				%s\n", m_StarPoY.data());
 	// E Scintilators	
+	printf(" BT2017ConMan::Load() => USEDESCINTILLATOR		        		%s\n", m_SUseSci.data());
 	printf(" BT2017ConMan::Load() => EXPAND		        		%s\n", m_SSciEpx.data());
   // Tracker Bars
 	printf(" BT2017ConMan::Load() => FIXEDCOLUMN		        		%s\n", m_SfixCol.data());
@@ -554,13 +564,15 @@ G4double BT2017ConMan::GetTarPoX() {return m_TarPoX;}
 void BT2017ConMan::SetTarPoY(G4double tarPoY){m_TarPoY = tarPoY;}
 G4double BT2017ConMan::GetTarPoY() {return m_TarPoY;}
 // Scintilator
+void BT2017ConMan::SetUseSci(G4bool useSci){m_UseSci = useSci;}
+G4bool BT2017ConMan::GetUseSci() {return m_UseSci;}
 void BT2017ConMan::SetExpand(G4double expand){m_SciEpx = expand;}
 G4double BT2017ConMan::GetExpand() {return m_SciEpx;}
 // Trackers
 void BT2017ConMan::SetFixedColumn(G4bool fixCol){m_fixCol = fixCol;}
-G4double BT2017ConMan::GetFixedColumn() {return m_fixCol;}
+G4bool BT2017ConMan::GetFixedColumn() {return m_fixCol;}
 void BT2017ConMan::SetMovingColumn(G4bool movCol){m_movCol = movCol;}
-G4double BT2017ConMan::GetMovingColumn() {return m_movCol;}
+G4bool BT2017ConMan::GetMovingColumn() {return m_movCol;}
 void BT2017ConMan::SetTranslate(G4double translate){m_TrTrx = translate;}
 G4double BT2017ConMan::GetTranslate() {return m_TrTrx;}
 // Crystals
