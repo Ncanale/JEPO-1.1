@@ -68,7 +68,7 @@ target_link_libraries(jepo ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})# Analysis)
 # because it relies on these scripts being in the current working directory.   #
 #------------------------------------------------------------------------------#
 set(JEPO_SCRIPTS
-	README
+	README.md
 	init_vis.mac
 	vis.mac
 	1M_event.mac
