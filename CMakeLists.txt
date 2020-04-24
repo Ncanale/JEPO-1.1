@@ -71,6 +71,7 @@ set(JEPO_SCRIPTS
 	README.md
 	init_vis.mac
 	vis.mac
+	config.cfg
 	1M_event.mac
 	10k_event.mac
 	100k_event.mac	

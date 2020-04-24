@@ -56,7 +56,7 @@ int main (int argc, char** argv)
 	const char* optDic = "hbgm:c:z:y:t:"; // Option dictionary
 	
 	char * macro;
-    const char * config = "../source/config.cfg";
+    const char * config = "config.cfg";
 	
 	G4double GunZPos = 0;
 	G4double GunYPos = 0;
