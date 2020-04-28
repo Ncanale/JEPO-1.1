@@ -12,6 +12,9 @@ Geant4 Simulation of Polarimeter setup of COSY Storage Ring
     Whereas front direction has double thickness for each of layers.
 
 = 11. Apr. 2020. by Rahul Shankar = 
-  - Triangular Bar Trackers added
-    Front stack is fixed and rear stack is movable in the Y direction
-  - Activated option to turn on/off dE Scintillators
+  - Triangular Bar Trackers added (Front stack is fixed and rear stack is movable in the Y direction).
+  - Activated option to turn on/off dE Scintillators.
+  
+= 28. Apr. 2020. by Rahul Shankar =
+  - Added customizability to tracker-bar setup via config file.
+  - Added feature to sequentially name the tracker bars drawn.
