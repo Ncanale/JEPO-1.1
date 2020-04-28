@@ -179,37 +179,37 @@ void BT2017DetMap::Init()
     m_dEIDFromdEName[m_dENameFromdEID[i]] = i;
 
   // creating Tracker map
-  m_TrNameFromTrID[0]   = "tr_0"; //Fixed Column - Base facing the Beam
-  m_TrNameFromTrID[1]   = "tr_1";
-  m_TrNameFromTrID[2]   = "tr_2";
-  m_TrNameFromTrID[3]   = "tr_3";
-  m_TrNameFromTrID[4]   = "tr_4";
-  m_TrNameFromTrID[5]   = "tr_5";
-  m_TrNameFromTrID[6]   = "tr_6";
+  m_TrNameFromTrID[0]   = "F_01"; //Fixed Column - Base facing the Beam
+  m_TrNameFromTrID[1]   = "F_02";
+  m_TrNameFromTrID[2]   = "F_03";
+  m_TrNameFromTrID[3]   = "F_04";
+  m_TrNameFromTrID[4]   = "F_05";
+  m_TrNameFromTrID[5]   = "F_06";
+  m_TrNameFromTrID[6]   = "F_07";
   
-  m_TrNameFromTrID[7]   = "tr_7"; //Fixed Column - Filpped
-  m_TrNameFromTrID[8]   = "tr_8";
-  m_TrNameFromTrID[9]   = "tr_9";
-  m_TrNameFromTrID[10]   = "tr_10";
-  m_TrNameFromTrID[11]   = "tr_11";
-  m_TrNameFromTrID[12]   = "tr_12";
-  m_TrNameFromTrID[13]   = "tr_13";
+  m_TrNameFromTrID[7]   = "F_08"; //Fixed Column - Filpped
+  m_TrNameFromTrID[8]   = "F_09";
+  m_TrNameFromTrID[9]   = "F_10";
+  m_TrNameFromTrID[10]   = "F_11";
+  m_TrNameFromTrID[11]   = "F_12";
+  m_TrNameFromTrID[12]   = "F_13";
+  m_TrNameFromTrID[13]   = "F_14";
   
-  m_TrNameFromTrID[14]   = "tr_14"; //Moving Column - Base facing the Beam
-  m_TrNameFromTrID[15]   = "tr_15";
-  m_TrNameFromTrID[16]   = "tr_16";
-  m_TrNameFromTrID[17]   = "tr_17";
-  m_TrNameFromTrID[18]   = "tr_18";
-  m_TrNameFromTrID[19]   = "tr_19";
-  m_TrNameFromTrID[20]   = "tr_20";
+  m_TrNameFromTrID[14]   = "B_01"; //Moving Column - Base facing the Beam
+  m_TrNameFromTrID[15]   = "B_02";
+  m_TrNameFromTrID[16]   = "B_03";
+  m_TrNameFromTrID[17]   = "B_04";
+  m_TrNameFromTrID[18]   = "B_05";
+  m_TrNameFromTrID[19]   = "B_06";
+  m_TrNameFromTrID[20]   = "B_07";
   
-  m_TrNameFromTrID[21]   = "tr_21"; //Moving Column - Flipped
-  m_TrNameFromTrID[22]   = "tr_22";
-  m_TrNameFromTrID[23]   = "tr_23";
-  m_TrNameFromTrID[24]   = "tr_24";
-  m_TrNameFromTrID[25]   = "tr_25";
-  m_TrNameFromTrID[26]   = "tr_26";
-  m_TrNameFromTrID[27]   = "tr_27";
+  m_TrNameFromTrID[21]   = "B_08"; //Moving Column - Flipped
+  m_TrNameFromTrID[22]   = "B_09";
+  m_TrNameFromTrID[23]   = "B_10";
+  m_TrNameFromTrID[24]   = "B_11";
+  m_TrNameFromTrID[25]   = "B_12";
+  m_TrNameFromTrID[26]   = "B_13";
+  m_TrNameFromTrID[27]   = "B_14";
 
   for ( int i = 0; i < 28; i++ ) 
     m_TrIDFromTrName[m_TrNameFromTrID[i]] = i;

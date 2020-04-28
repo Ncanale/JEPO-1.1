@@ -92,7 +92,7 @@ void BT2017SteAct::UserSteppingAction(const G4Step* step)
 		m_EA -> AddEDepdE(m_DM -> GetdEIDFromdEName("dE_D"), eDep);
 	
 	// Energy deposited to tracker bars
-	else if ( namePrePV.contains("tr_") )
+	else if ( namePrePV.contains("F_") || namePrePV.contains("B_"))
     //G4cout<<"Yes!! "<<namePrePV<<G4endl;
 		m_EA -> AddEDepTr(m_DM -> GetTrIDFromTrName(namePrePV), eDep);
 
