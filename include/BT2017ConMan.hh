@@ -97,6 +97,8 @@ class BT2017ConMan
 	void SetExpand(G4double expand);
 	G4double GetExpand();
   // Tracker Bars
+	void SetTrSet(std::vector<G4bool> trSet);
+	std::vector<G4bool> GetTrSet() ;
 	void SetFixedColumn(G4bool fixCol);
 	G4bool GetFixedColumn();
 	void SetMovingColumn(G4bool movCol);
@@ -171,6 +173,7 @@ class BT2017ConMan
 	std::string m_SUseSci; G4bool m_UseSci;
 	std::string m_SSciEpx; G4double m_SciEpx;
   //  Tracker Bars
+	std::string m_STrSet; std::vector<G4bool> m_TrSet;
 	std::string m_SfixCol; G4bool m_fixCol;
 	std::string m_SmovCol; G4bool m_movCol;
 	std::string m_STrTrx; G4double m_TrTrx;

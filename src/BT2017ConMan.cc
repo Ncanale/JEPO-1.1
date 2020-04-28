@@ -81,6 +81,7 @@ void BT2017ConMan::SetDefault()
 	m_SciEpx = 	  630 * mm;
   
   // Tracker Bars
+	m_TrSet.assign(28, false);
   m_fixCol =   false;
   m_movCol =   false;
 	m_TrTrx = 	  0 * mm;
@@ -114,6 +115,7 @@ bool BT2017ConMan::Load(const char* fileName)
 	// Read line by line
 	std::string line;
 	m_DetSet.assign(120, false);
+	m_TrSet.assign(120, false);
 	while ( std::getline(file, line) )
 	{
 		if ( StartsWith(line, "#") ) continue;
@@ -327,6 +329,23 @@ bool BT2017ConMan::Load(const char* fileName)
 			m_SciEpx = std::stod(m_SSciEpx) * mm;
 		}
 		// Tracker Bars
+		if ( StartsWith(line, "TRACKERSETUP") )
+		{
+			char hfile[1000];
+			sscanf(line.data(), "TRACKERSETUP %s", hfile);
+			m_STrSet = hfile;
+			if ( m_STrSet.length() != 28 ) m_TrSet.assign(28, false);
+			else
+			{
+				int temp;
+				for ( int i = 0; i < 28; i++ )
+				{
+					temp = m_STrSet.data()[i];
+					if ( temp == 48 ) m_TrSet[i] = false;
+					else m_TrSet[i] = true;
+				}
+			}
+		}
 		if ( StartsWith(line, "FIXEDCOLUMN") )
 		{
 			char hfile[1000];
@@ -489,6 +508,7 @@ void BT2017ConMan::PrintConfiguration()
 	printf(" BT2017ConMan::Load() => USEDESCINTILLATOR		        		%s\n", m_SUseSci.data());
 	printf(" BT2017ConMan::Load() => EXPAND		        		%s\n", m_SSciEpx.data());
   // Tracker Bars
+	printf(" BT2017ConMan::Load() => TRACKERSETUP      		%s\n", m_SDetSet.data());
 	printf(" BT2017ConMan::Load() => FIXEDCOLUMN		        		%s\n", m_SfixCol.data());
 	printf(" BT2017ConMan::Load() => MOVINGCOLUMN		        		%s\n", m_SmovCol.data());
 	printf(" BT2017ConMan::Load() => TRANSLATE		        		%s\n", m_STrTrx.data());
@@ -569,6 +589,8 @@ G4bool BT2017ConMan::GetUseSci() {return m_UseSci;}
 void BT2017ConMan::SetExpand(G4double expand){m_SciEpx = expand;}
 G4double BT2017ConMan::GetExpand() {return m_SciEpx;}
 // Trackers
+void BT2017ConMan::SetTrSet(std::vector<G4bool> trSet){m_TrSet = trSet;}
+std::vector<G4bool> BT2017ConMan::GetTrSet() {return m_TrSet;}
 void BT2017ConMan::SetFixedColumn(G4bool fixCol){m_fixCol = fixCol;}
 G4bool BT2017ConMan::GetFixedColumn() {return m_fixCol;}
 void BT2017ConMan::SetMovingColumn(G4bool movCol){m_movCol = movCol;}

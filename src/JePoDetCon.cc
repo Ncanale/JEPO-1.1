@@ -84,6 +84,7 @@ void JePoDetCon::DefineDimensions()
 	scZL =  20.0 * mm;
 
 	// Tracker dimensions (It will measure Particle Position)
+	trS = m_CM -> GetTrSet(); // Setup
  	trB = 60.0 * mm; // single prism dimensions
  	trH = 20.0 * mm;
   trL = 300.0 * mm;
@@ -317,7 +318,7 @@ G4VPhysicalVolume* JePoDetCon::Construct()
 
 	// Place them
 	for( int i = (14 - 14*m_CM->GetFixedColumn()); i < (14 + 14*m_CM->GetMovingColumn()); i++)
-		if( trIsConstructed[i])
+		if( trS[i] && trIsConstructed[i])
 			new G4PVPlacement(tRot[i], trPos[i],  trName[i] + "_cover", trLV[i], labPV, false, 0);
 
 	return labPV;
@@ -592,7 +593,9 @@ void JePoDetCon::ConstructScintillator(G4String direction, G4int sciId, G4double
 void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
 {	
 	// construct name of scintillator
-	trName[trID] = "tr_" + G4UIcommand::ConvertToString(trID);
+  nTr = (trID % 14 ? nTr : 0);
+  nTr = nTr + trS[trID];
+	trName[trID] = (trID / 14 ? "B_" : "F_") + ((nTr>9 ? "" : "0") + G4UIcommand::ConvertToString(nTr));
   
 	// Define configuration for a structure
   G4double tanth = trH / (trB/2);
@@ -625,7 +628,7 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
 
 	// Define position of tracker
   G4double posX = 0 * mm;
-	G4double posY = (3.5 - (trID % 7) + ((trID / 7) % 2)*0.5) * (2*iB + trB) + (trID / 14) * translate;
+	G4double posY = (3.5 - (trID % 7) - (1 - (trID / 7) % 2)*0.5) * (2*iB + trB) + (trID / 14) * translate;
   G4double posZ = detZ - (2 - (trID / 14))*(iH + trH + AlT + 1.0*mm) - 1.0*mm;
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   

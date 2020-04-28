@@ -94,6 +94,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4double coud, couD, couT;
 	G4double scXL, scYL, scZL;
 	G4double trB, trH, trL, AlT;
+	std::vector<G4bool> trS;
 	G4double detE, detL, detG;
 	G4double detX, detY, detZ, detA;
 	std::vector<G4bool> detS;
@@ -159,6 +160,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4RotationMatrix* 	cryRot;
 
 	// construction of tracker
+  G4int  nTr = 0;
 	G4String			trName[28];
 	G4ExtrudedSolid*	tracker_bar;
 	G4ExtrudedSolid*	tracker_cover;
