@@ -88,7 +88,7 @@ void JePoDetCon::DefineDimensions()
  	trB = 60.0 * mm; // single prism dimensions
  	trH = 20.0 * mm;
   trL = 300.0 * mm;
- 	AlT =  1.0 * mm;
+ 	AlT =  0.01 * mm;
 
 	// Configuration for B0 volume
 	const	G4double	zl = 404.8/2 ;
@@ -628,7 +628,7 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
 
 	// Define position of tracker
   G4double posX = 0 * mm;
-	G4double posY = (3.5 - (trID % 7) - (1 - (trID / 7) % 2)*0.5) * (2*iB + trB) + (trID / 14) * translate;
+	G4double posY = (10 * (1 - (trID / 14))) + (3.5 - (trID % 7) - (1 - (trID / 7) % 2)*0.5) * (2*iB + trB) + (trID / 14) * translate;
   G4double posZ = detZ - (2 - (trID / 14))*(iH + trH + AlT + 1.0*mm) - 1.0*mm;
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   
@@ -636,7 +636,7 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   tRot[trID] = new G4RotationMatrix;
   tRot[trID] -> rotateY(-M_PI/2);
   tRot[trID] -> rotateZ(-M_PI/2);
-  tRot[trID] -> rotateX(-((trID / 7) % 2) * M_PI);
+  tRot[trID] -> rotateX(-(((trID / 7) + (trID / 14)) % 2) * M_PI);
 
 	// Done!
 	trIsConstructed[trID] = true;

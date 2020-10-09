@@ -39,6 +39,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 	G4ParticleTable *PT = G4ParticleTable::GetParticleTable();
 	m_Par = PT->FindParticle(m_parname);
 	PG->SetParticleDefinition(m_Par);
+  //G4cerr<<"Charge: "<<PG->GetParticleCharge()<<"; Mass: "<<PG->GetParticleDefinition()->GetAtomicMass()<<G4endl;
 
 	// Kinetic energy
 	m_KinEgy = m_CM->GetBeamKE();
@@ -126,6 +127,8 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	m_matrix->rotateY( -m_MomDir.x());
 	m_matrix->rotateX(  m_MomDir.y());
 
+  G4int NoE = 100000;
+  if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
 	PG -> SetParticleMomentumDirection(m_MomDir);
 
 	// 2D Gaussian
