@@ -626,19 +626,24 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   // Put the bar in the cover
 	new G4PVPlacement(0, G4ThreeVector(), tbarLV[trID], trName[trID], trLV[trID], false, 0, 0);
 
-	// Define position of tracker
-  G4double posX = 0 * mm;
-	G4double posY = (10 * (1 - (trID / 14))) + (3.5 - (trID % 7) - (1 - (trID / 7) % 2)*0.5) * (2*iB + trB) + (trID / 14) * translate;
-  G4double posZ = detZ - (2 - (trID / 14))*(iH + trH + AlT + 1.0*mm) - 1.0*mm;
+  int ff, fb, bf, bb;
+  ff = (1 - ((trID / 7) % 2)) * (1 - (trID / 14));
+  fb = ((trID / 7) % 2) * (1 - (trID / 14));
+  bf = (1 - ((trID / 7) % 2)) * (trID / 14);
+  bb = ((trID / 7) % 2) * (trID / 14);
+
+  // Define position of tracker
+  G4double posX = (translate + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
+	G4double posY = (translate + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
+  G4double posZ = detZ - (1 + ff + fb)*(iH + trH + AlT + 1.0*mm) - 1.0*mm;
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   
 	// Define rotation of tracker
   tRot[trID] = new G4RotationMatrix;
-  tRot[trID] -> rotateY(-M_PI/2);
-  tRot[trID] -> rotateZ(-M_PI/2);
-  tRot[trID] -> rotateX(-(((trID / 7) + (trID / 14)) % 2) * M_PI);
+  tRot[trID] -> rotateX(-M_PI/2 * (ff - fb + bf - bb));
+  tRot[trID] -> rotateY(-M_PI/2 * (ff + fb));
 
-	// Done!
+  // Done!
 	trIsConstructed[trID] = true;
 }
 
