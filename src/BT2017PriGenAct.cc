@@ -127,7 +127,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	m_matrix->rotateY( -m_MomDir.x());
 	m_matrix->rotateX(  m_MomDir.y());
 
-  G4int NoE = 100000;
+  G4int NoE = 10000;
   if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
 	PG -> SetParticleMomentumDirection(m_MomDir);
 

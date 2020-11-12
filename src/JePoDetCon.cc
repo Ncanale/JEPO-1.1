@@ -633,15 +633,21 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   bb = ((trID / 7) % 2) * (trID / 14);
 
   // Define position of tracker
+    //  For perpendicular configuration
   G4double posX = (translate + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
 	G4double posY = (translate + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
-  G4double posZ = detZ - (1 + ff + fb)*(iH + trH + AlT + 1.0*mm) - 1.0*mm;
+    //  For parallel configuration
+  //G4double posX = 0;
+	//G4double posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (ff + fb)*10 + (bf + bb)*translate;
+    //
+  G4double posZ = detZ - (1 + ff + fb)*(iH + trH + AlT + 1.0) - 1.0;
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   
 	// Define rotation of tracker
   tRot[trID] = new G4RotationMatrix;
   tRot[trID] -> rotateX(-M_PI/2 * (ff - fb + bf - bb));
-  tRot[trID] -> rotateY(-M_PI/2 * (ff + fb));
+  tRot[trID] -> rotateY(-M_PI/2 * (ff + fb));    //  For perpendicular configuration
+  //tRot[trID] -> rotateY(-M_PI/2);    //  For parallel configuration
 
   // Done!
 	trIsConstructed[trID] = true;
