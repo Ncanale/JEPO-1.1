@@ -74,7 +74,8 @@ set(JEPO_SCRIPTS
 	config.cfg
 	1M_event.mac
 	10k_event.mac
-	100k_event.mac	
+	100k_event.mac
+	n_event.mac
 )
 
 foreach(_script ${JEPO_SCRIPTS})

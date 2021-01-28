@@ -82,8 +82,9 @@ void BT2017ConMan::SetDefault()
   
   // Tracker Bars
 	m_TrSet.assign(28, false);
-  m_fixCol =   false;
-  m_movCol =   false;
+  //m_fixCol =   false;
+  //m_movCol =   false;
+  m_trCon =     1;
 	m_TrTrx = 	  0 * mm;
 
   // Crystals
@@ -346,6 +347,7 @@ bool BT2017ConMan::Load(const char* fileName)
 				}
 			}
 		}
+		/*
 		if ( StartsWith(line, "FIXEDCOLUMN") )
 		{
 			char hfile[1000];
@@ -361,6 +363,15 @@ bool BT2017ConMan::Load(const char* fileName)
 			m_SmovCol = hfile;
 			if      ( m_SmovCol == "ON"  ) m_movCol = true;
 			else if ( m_SmovCol == "OFF" ) m_movCol = false;
+		}
+		*/
+		if ( StartsWith(line, "TRACKERCONFIG") )
+		{
+			char hfile[1000];
+			sscanf(line.data(), "TRACKERCONFIG %s", hfile);
+			m_StrCon = hfile;
+			if      ( m_StrCon == "PERPENDICULAR"  ) m_trCon = 1;
+			else if ( m_StrCon == "PARALLEL" ) m_trCon = 0;
 		}
 		if ( StartsWith(line, "TRANSLATE") )
 		{
@@ -509,8 +520,9 @@ void BT2017ConMan::PrintConfiguration()
 	printf(" BT2017ConMan::Load() => EXPAND		        		%s\n", m_SSciEpx.data());
   // Tracker Bars
 	printf(" BT2017ConMan::Load() => TRACKERSETUP      		%s\n", m_SDetSet.data());
-	printf(" BT2017ConMan::Load() => FIXEDCOLUMN		        		%s\n", m_SfixCol.data());
-	printf(" BT2017ConMan::Load() => MOVINGCOLUMN		        		%s\n", m_SmovCol.data());
+	//printf(" BT2017ConMan::Load() => FIXEDCOLUMN		        		%s\n", m_SfixCol.data());
+	//printf(" BT2017ConMan::Load() => MOVINGCOLUMN		        		%s\n", m_SmovCol.data());
+	printf(" BT2017ConMan::Load() => TRACKERCONFIG		        		%s\n", m_StrCon.data());
 	printf(" BT2017ConMan::Load() => TRANSLATE		        		%s\n", m_STrTrx.data());
 	// Crystals	
 	printf(" BT2017ConMan::Load() => DETECTORSETUP      		%s\n", m_SDetSet.data());
@@ -591,10 +603,12 @@ G4double BT2017ConMan::GetExpand() {return m_SciEpx;}
 // Trackers
 void BT2017ConMan::SetTrSet(std::vector<G4bool> trSet){m_TrSet = trSet;}
 std::vector<G4bool> BT2017ConMan::GetTrSet() {return m_TrSet;}
-void BT2017ConMan::SetFixedColumn(G4bool fixCol){m_fixCol = fixCol;}
-G4bool BT2017ConMan::GetFixedColumn() {return m_fixCol;}
-void BT2017ConMan::SetMovingColumn(G4bool movCol){m_movCol = movCol;}
-G4bool BT2017ConMan::GetMovingColumn() {return m_movCol;}
+//void BT2017ConMan::SetFixedColumn(G4bool fixCol){m_fixCol = fixCol;}
+//G4bool BT2017ConMan::GetFixedColumn() {return m_fixCol;}
+//void BT2017ConMan::SetMovingColumn(G4bool movCol){m_movCol = movCol;}
+//G4bool BT2017ConMan::GetMovingColumn() {return m_movCol;}
+void BT2017ConMan::SetTrackerConfig(G4bool trCon){m_trCon = trCon;}
+G4bool BT2017ConMan::GetTrackerConfig() {return m_trCon;}
 void BT2017ConMan::SetTranslate(G4double translate){m_TrTrx = translate;}
 G4double BT2017ConMan::GetTranslate() {return m_TrTrx;}
 // Crystals

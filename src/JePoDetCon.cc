@@ -85,6 +85,7 @@ void JePoDetCon::DefineDimensions()
 
 	// Tracker dimensions (It will measure Particle Position)
 	trS = m_CM -> GetTrSet(); // Setup
+	trCon = m_CM -> GetTrackerConfig(); // Setup
  	trB = 60.0 * mm; // single prism dimensions
  	trH = 20.0 * mm;
   trL = 300.0 * mm;
@@ -317,7 +318,7 @@ G4VPhysicalVolume* JePoDetCon::Construct()
     ConstructTracker(i, m_CM -> GetTranslate());
 
 	// Place them
-	for( int i = (14 - 14*m_CM->GetFixedColumn()); i < (14 + 14*m_CM->GetMovingColumn()); i++)
+	for( int i = 0; i < 28; i++)
 		if( trS[i] && trIsConstructed[i])
 			new G4PVPlacement(tRot[i], trPos[i],  trName[i] + "_cover", trLV[i], labPV, false, 0);
 
@@ -633,21 +634,24 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   bb = ((trID / 7) % 2) * (trID / 14);
 
   // Define position of tracker
-    //  For perpendicular configuration
-  G4double posX = (translate + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
-	G4double posY = (translate + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
-    //  For parallel configuration
-  //G4double posX = 0;
-	//G4double posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (ff + fb)*10 + (bf + bb)*translate;
-    //
-  G4double posZ = detZ - (1 + ff + fb)*(iH + trH + AlT + 1.0) - 1.0;
+  G4double posX, posY, posZ;
+  if(trCon)     //  For perpendicular configuration
+  {
+    posX = (translate + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
+    posY = (translate + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
+  }
+  else          //  For parallel configuration
+  {
+    posX = 0;
+    posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (bf + bb)*translate;
+  }
+  posZ = detZ - (1 + ff + fb)*(iH + trH + AlT + 1.0) - 1.0;
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   
 	// Define rotation of tracker
   tRot[trID] = new G4RotationMatrix;
   tRot[trID] -> rotateX(-M_PI/2 * (ff - fb + bf - bb));
-  tRot[trID] -> rotateY(-M_PI/2 * (ff + fb));    //  For perpendicular configuration
-  //tRot[trID] -> rotateY(-M_PI/2);    //  For parallel configuration
+  tRot[trID] -> rotateY(-M_PI/2 * (trCon ? (ff + fb) : 1));    //  Y-rotation depends on configuration
 
   // Done!
 	trIsConstructed[trID] = true;

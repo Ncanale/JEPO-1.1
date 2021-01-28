@@ -169,6 +169,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4ThreeVector		trPos[28];
 	G4bool				trIsConstructed[28] = {false};
 	G4RotationMatrix* 	tRot[28];
+  G4bool  trCon = 0; // 0: Parallel; 1: Perpendicular
 
 	// construction of symetric volumes
 	G4VisAttributes	*steelVis ;
