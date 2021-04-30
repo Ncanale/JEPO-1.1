@@ -38,6 +38,7 @@
 
 #include "QGSP_BERT.hh"
 #include "JediPhysicsListFactory.hh"
+#include "G4HadronicParameters.hh"
 
 // ROOT
 //#include <TFile.h>
@@ -155,12 +156,13 @@ int main (int argc, char** argv)
 	}
 	else
 	{
-		G4VModularPhysicsList* PL = new QGSP_BERT;
+		G4VModularPhysicsList* PL = new QGSP_BERT(0);
 		PL -> SetVerboseLevel(0);
 		RM -> SetUserInitialization(PL);
 	}
 
 	// User actions
+	G4HadronicParameters::Instance()->SetVerboseLevel(0);
 	RM -> SetUserInitialization( new BT2017ActIni(BT2017CM) );
 
 	// Initialize

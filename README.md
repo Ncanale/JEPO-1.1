@@ -18,3 +18,8 @@ Geant4 Simulation of Polarimeter setup of COSY Storage Ring
 = 28. Apr. 2020. by Rahul Shankar =
   - Added customizability to tracker-bar setup via config file.
   - Added feature to sequentially name the tracker bars drawn.
+  
+= 28. Jan. 2021. by Rahul Shankar =
+  - Added ability to switch between parallel and perpendicular configurations of tracker bars
+    in config file.
+  - Disabled switches of fixed and moving columns.

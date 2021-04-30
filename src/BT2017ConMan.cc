@@ -519,7 +519,7 @@ void BT2017ConMan::PrintConfiguration()
 	printf(" BT2017ConMan::Load() => USEDESCINTILLATOR		        		%s\n", m_SUseSci.data());
 	printf(" BT2017ConMan::Load() => EXPAND		        		%s\n", m_SSciEpx.data());
   // Tracker Bars
-	printf(" BT2017ConMan::Load() => TRACKERSETUP      		%s\n", m_SDetSet.data());
+	printf(" BT2017ConMan::Load() => TRACKERSETUP      		%s\n", m_STrSet.data());
 	//printf(" BT2017ConMan::Load() => FIXEDCOLUMN		        		%s\n", m_SfixCol.data());
 	//printf(" BT2017ConMan::Load() => MOVINGCOLUMN		        		%s\n", m_SmovCol.data());
 	printf(" BT2017ConMan::Load() => TRACKERCONFIG		        		%s\n", m_StrCon.data());

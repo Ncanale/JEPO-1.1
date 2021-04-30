@@ -9,6 +9,7 @@
 
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
+#include "G4PhysicalVolumeStore.hh"
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4Cons.hh"
@@ -88,8 +89,12 @@ void JePoDetCon::DefineDimensions()
 	trCon = m_CM -> GetTrackerConfig(); // Setup
  	trB = 60.0 * mm; // single prism dimensions
  	trH = 20.0 * mm;
-  trL = 300.0 * mm;
+  //trL = 300.0 * mm;
+  trL = 7 * trB;
  	AlT =  0.01 * mm;
+	holX = 90.0 * mm;
+	holY = 90.0 * mm;
+	layT = 2.0 * mm;
 
 	// Configuration for B0 volume
 	const	G4double	zl = 404.8/2 ;
@@ -314,14 +319,19 @@ G4VPhysicalVolume* JePoDetCon::Construct()
   
 
   // construct trackers
-	for( int i = 0; i < 28; i++)
-    ConstructTracker(i, m_CM -> GetTranslate());
+  ConstructTracker();
+	for( int i = 0; i < 28; i++) PlanTracker(i, m_CM -> GetTranslate());
 
 	// Place them
-	for( int i = 0; i < 28; i++)
-		if( trS[i] && trIsConstructed[i])
-			new G4PVPlacement(tRot[i], trPos[i],  trName[i] + "_cover", trLV[i], labPV, false, 0);
-
+	for( int i = 0; i < 28; i++) if( trS[i] && trIsConstructed[i]) PlaceTracker(i,m_CM->GetTranslate());
+	G4bool AtrS = 0;
+	for( int i = 0; i < 28; i++) AtrS = AtrS || trS[i];
+	if(AtrS)
+	{
+		new G4PVPlacement(0, pLayPosF, "playF", pLayLV, labPV, false, 0);
+		new G4PVPlacement(0, pLayPosB, "playB", pLayLV, labPV, false, 0);
+	}
+	
 	return labPV;
 }
 
@@ -466,6 +476,11 @@ void JePoDetCon::ConstructMaterials()
 	// Aluminium coating material
 	m_AlCoaMat = new G4Material("Aluminium Coating", 2.70*g/cm3, 1, kStateSolid, labTemp);
 	m_AlCoaMat -> AddElement(m_ElAl, 1);
+
+	// Material of Plastic Layer around Trackers
+	m_LayMat = new G4Material("Polyethelene", 0.92*g/cm3, 2, kStateSolid, labTemp);
+	m_LayMat -> AddElement(m_ElC, 1);
+	m_LayMat -> AddElement(m_ElH, 2);
 }
 
 void JePoDetCon::DestructMaterials()
@@ -591,13 +606,8 @@ void JePoDetCon::ConstructScintillator(G4String direction, G4int sciId, G4double
 	sciIsConstructed[sciId] = true;
 }
 
-void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
-{	
-	// construct name of scintillator
-  nTr = (trID % 14 ? nTr : 0);
-  nTr = nTr + trS[trID];
-	trName[trID] = (trID / 14 ? "B_" : "F_") + ((nTr>9 ? "" : "0") + G4UIcommand::ConvertToString(nTr));
-  
+void JePoDetCon::ConstructTracker()
+{
 	// Define configuration for a structure
   G4double tanth = trH / (trB/2);
   G4double costh = 1 / sqrt(1 + tanth*tanth);
@@ -615,17 +625,43 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   tCover.push_back(G4TwoVector(-iB-trB/2 , -iO-AlT-trH/2));
   tCover.push_back(G4TwoVector(iB+trB/2 , -iO-AlT-trH/2));
   G4TwoVector off1(0,0), off2(0,0);
-  tracker_bar = new G4ExtrudedSolid("tracker_bar",tBar,trL,off1,1.,off2,1.);
-  tracker_cover = new G4ExtrudedSolid("tracker_cover",tCover,trL,off1,1.,off2,1.);
+  tracker_bar = new G4ExtrudedSolid("tracker_bar",tBar,trL/2,off1,1.,off2,1.);
+  G4ExtrudedSolid* tracker_cover_solid = new G4ExtrudedSolid("tracker_cover_solid",tCover,trL/2,off1,1.,off2,1.);
+	//tracker_bar = new G4SubtractionSolid("tracker_bar",tracker_bar_solid,hole);
+	//G4SubtractionSolid* tracker_cover_full = new G4SubtractionSolid("tracker_cover_full",tracker_cover_solid,tracker_bar);
+	tracker_cover = new G4SubtractionSolid("tracker_cover",tracker_cover_solid,tracker_bar);
 
 	// initialize logical volume
-	trLV[trID] = new G4LogicalVolume(tracker_cover, m_AlCoaMat, trName[trID]);
-  tbarLV[trID] = new G4LogicalVolume(tracker_bar, m_CouMat, trName[trID] + "_bar");
-	trLV[trID]-> SetVisAttributes(new G4VisAttributes(G4Color(1.0, 1.0, 1.0, 0.2)));
-	tbarLV[trID]-> SetVisAttributes(new G4VisAttributes(G4Color(0.0, 1.0, 0.0, 0.05)));
+	tcovLV = new G4LogicalVolume(tracker_cover, m_AlCoaMat, "tracker_cover");
+  tbarLV = new G4LogicalVolume(tracker_bar, m_CouMat, "tracker_bar");
+	tcovLV-> SetVisAttributes(new G4VisAttributes(G4Color(1.0, 1.0, 1.0, 0.2)));
+	tbarLV-> SetVisAttributes(new G4VisAttributes(G4Color(0.0, 1.0, 0.0, 0.05)));
 
-  // Put the bar in the cover
-	new G4PVPlacement(0, G4ThreeVector(), tbarLV[trID], trName[trID], trLV[trID], false, 0, 0);
+	// initialize the hole and the plastic layers
+	holZ = 2*(iH + trH + AlT) + 3.0;
+	hole = new G4Box("hole", holX/2, holY/2, holZ/2);
+	G4Box* pLay_full = new G4Box("play_full", trL/2, trL/2, layT/2);
+	pLay = new G4SubtractionSolid("play",pLay_full,hole);
+	pLayLV = new G4LogicalVolume((trCon ? pLay : pLay_full), m_LayMat, "playLV");
+	pLayLV-> SetVisAttributes(new G4VisAttributes(G4Color(1.0, 1.0, 0.0, 0.1)));
+	pLayPosF = G4ThreeVector((trCon ? m_CM->GetTranslate() : 0),0,detZ-layT/2-2*(iH+trH+AlT+0.01)-30.0);
+	pLayPosB = G4ThreeVector((trCon ? -m_CM->GetTranslate() : 0),0,detZ+layT/2-30.0+0.01);
+}
+
+void JePoDetCon::PlanTracker(G4int trID, G4double translate)
+{	
+	// construct name of scintillator
+  nTr = (trID % 14 ? nTr : 0);
+  nTr = nTr + trS[trID];
+	trName[trID] = (trID / 14 ? "B_" : "F_") + ((nTr>9 ? "" : "0") + G4UIcommand::ConvertToString(nTr));
+  
+	// Define configuration for a structure
+  G4double tanth = trH / (trB/2);
+  G4double costh = 1 / sqrt(1 + tanth*tanth);
+  G4double sinth = sqrt(1 - costh*costh);
+  G4double iH = AlT / costh;
+  G4double iB = AlT/tanth + AlT/sinth;
+  //G4double iO = (iH - AlT) / 2;
 
   int ff, fb, bf, bb;
   ff = (1 - ((trID / 7) % 2)) * (1 - (trID / 14));
@@ -637,24 +673,54 @@ void JePoDetCon::ConstructTracker(G4int trID, G4double translate)
   G4double posX, posY, posZ;
   if(trCon)     //  For perpendicular configuration
   {
-    posX = (translate + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
-    posY = (translate + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
+    posX = translate * (ff + fb - bf - bb) + (-15 + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
+    posY = (-15 + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
   }
   else          //  For parallel configuration
   {
     posX = 0;
     posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (bf + bb)*translate;
   }
-  posZ = detZ - (1 + ff + fb)*(iH + trH + AlT + 1.0) - 1.0;
+  posZ = detZ - (0.5 + ff + fb)*(iH + trH + AlT + 0.01) - 30.0;
+  posH = G4ThreeVector(0, 0, detZ - (iH + trH + AlT + 0.01) - 30.0);
   trPos[trID] = G4ThreeVector(posX,posY,posZ);
   
 	// Define rotation of tracker
   tRot[trID] = new G4RotationMatrix;
+	RotH = new G4RotationMatrix;
   tRot[trID] -> rotateX(-M_PI/2 * (ff - fb + bf - bb));
   tRot[trID] -> rotateY(-M_PI/2 * (trCon ? (ff + fb) : 1));    //  Y-rotation depends on configuration
 
   // Done!
 	trIsConstructed[trID] = true;
+}
+
+void JePoDetCon::PlaceTracker(G4int trID, G4double translate)
+{
+	G4bool cutH = (trID%14 == 2) || (trID%14 == 3) || (trID%14 == 10) || (trID%14 == 11);
+	//G4bool cutE = (trID%14 == 0) || (trID%14 == 6) || (trID%14 == 7) || (trID%14 == 13);
+	//G4bool split = (trID%14 == 3);
+	if(trCon && cutH)// || cutE)
+	{
+		G4ThreeVector trns((1 - 2*(trID / 14)) * translate, 0, 0);
+		G4RotationMatrix i_rot = *tRot[trID];
+		trns = posH+trns-trPos[trID];
+		trns.transform(i_rot);
+		i_rot.invert();
+		G4SubtractionSolid* tracker_bar_cut = new G4SubtractionSolid("tracker_bar_cut",tracker_bar,hole,&i_rot,trns);
+		G4SubtractionSolid* tracker_cover_cut = new G4SubtractionSolid("tracker_cover_cut",tracker_cover,hole,&i_rot,trns);
+		G4LogicalVolume* barLV = new G4LogicalVolume(tracker_bar_cut, m_CouMat, "tracker_bar_cut" + G4UIcommand::ConvertToString(trID));
+		G4LogicalVolume* covLV = new G4LogicalVolume(tracker_cover_cut, m_AlCoaMat, "tracker_cover_cut" + G4UIcommand::ConvertToString(trID));
+		covLV-> SetVisAttributes(tcovLV->GetVisAttributes());
+		barLV-> SetVisAttributes(tbarLV->GetVisAttributes());
+		new G4PVPlacement(tRot[trID], trPos[trID], trName[trID], barLV, labPV, false, 0);
+		new G4PVPlacement(tRot[trID], trPos[trID], trName[trID] + "_cover", covLV, labPV, false, 0);
+	}
+	else
+	{
+		new G4PVPlacement(tRot[trID], trPos[trID], trName[trID], tbarLV, labPV, false, 0);
+		new G4PVPlacement(tRot[trID], trPos[trID], trName[trID] + "_cover", tcovLV, labPV, false, 0);
+	}
 }
 
 void JePoDetCon::ConstructSymmetricVolume(G4String name, G4int symVolID, G4double f1, G4double f2){
@@ -699,3 +765,4 @@ void JePoDetCon::ConstructSymmetricVolume(G4String name, G4int symVolID, G4doubl
 	// is constructed
 	symVolConstructed[symVolID] = true;
 }
+

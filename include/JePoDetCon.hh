@@ -43,7 +43,9 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	void DestructMaterials();
 	void ConstructCrystal(G4String, G4int, G4int, G4int, G4int);
 	void ConstructScintillator(G4String, G4int, G4double);
-  void ConstructTracker(G4int, G4double);
+  void ConstructTracker();
+  void PlanTracker(G4int, G4double);
+  void PlaceTracker(G4int, G4double);
 //	void ConstructBeamPipe(G4double f1 = 0, G4double f2 = 2.0*M_PI);
 
     //void ConstructSymmetricVolume(G4String, G4int, G4double f1 = M_PI/2, G4double f2 = 1.5*M_PI);
@@ -86,6 +88,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4Material* m_GasMat;
 	G4Material* m_PCBMat;
 	G4Material* m_CoaMat;
+	G4Material* m_LayMat;
 	G4Material* m_AlCoaMat;
 
 	// Dimensions and detector setup
@@ -93,7 +96,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4double tarX, tarY, tarT, tarxP, taryP;
 	G4double coud, couD, couT;
 	G4double scXL, scYL, scZL;
-	G4double trB, trH, trL, AlT;
+	G4double trB, trH, trL, AlT, holX, holY, holZ, layT;
 	std::vector<G4bool> trS;
 	G4double detE, detL, detG;
 	G4double detX, detY, detZ, detA;
@@ -162,13 +165,19 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	// construction of tracker
   G4int  nTr = 0;
 	G4String			trName[28];
-	G4ExtrudedSolid*	tracker_bar;
-	G4ExtrudedSolid*	tracker_cover;
-	G4LogicalVolume*	trLV[28];
-	G4LogicalVolume*	tbarLV[28];
+	G4VSolid*	tracker_bar;
+	G4VSolid*	tracker_cover;
+	G4Box*						hole;
+	G4VSolid*					pLay;
+	G4LogicalVolume*	tcovLV;
+	G4LogicalVolume*	tbarLV;
+	G4LogicalVolume*	holeLV;
+	G4LogicalVolume*	pLayLV;
 	G4ThreeVector		trPos[28];
+	G4ThreeVector		posH, pLayPosF, pLayPosB;
 	G4bool				trIsConstructed[28] = {false};
 	G4RotationMatrix* 	tRot[28];
+	G4RotationMatrix* 	RotH;
   G4bool  trCon = 0; // 0: Parallel; 1: Perpendicular
 
 	// construction of symetric volumes

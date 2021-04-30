@@ -77,8 +77,9 @@ void BT2017EveAct::EndOfEventAction(const G4Event* anEvent)
 		AM -> FillNtupleDColumn(iDet++, m_EDepdE[i]);
 	
 	// tracker bar filling
+  G4double Smear = 0.0;
 	for(int i = 0; i < 28; i++)
-		AM -> FillNtupleDColumn(iDet++, (m_EDepTr[i] <= 0.5 ? NaN : G4RandGauss::shoot(m_EDepTr[i],0.097*m_EDepTr[i]/2.355)));
+		AM -> FillNtupleDColumn(iDet++, (m_EDepTr[i] <= 0.5 ? NaN : G4RandGauss::shoot(m_EDepTr[i],Smear*m_EDepTr[i]/2.355)));
 	
 	AM -> FillNtupleDColumn(iDet++, xcoor);
 	

@@ -52,6 +52,7 @@ void BT2017SteAct::UserSteppingAction(const G4Step* step)
 //	G4String procName = step -> GetPostStepPoint() -> GetProcessDefinedStep() -> GetProcessName();
 	// // Physical volume
 	G4String namePrePV = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetName();
+	G4String namePreLV = step -> GetPreStepPoint() -> GetPhysicalVolume() -> GetLogicalVolume() -> GetName();
 //	G4String namePostPV;
 //	G4VPhysicalVolume* postPV = step -> GetPostStepPoint() -> GetPhysicalVolume();
 //	if ( postPV != 0 ) namePostPV = postPV -> GetName();
@@ -92,8 +93,11 @@ void BT2017SteAct::UserSteppingAction(const G4Step* step)
 		m_EA -> AddEDepdE(m_DM -> GetdEIDFromdEName("dE_D"), eDep);
 	
 	// Energy deposited to tracker bars
-	else if ( namePrePV.contains("F_") || namePrePV.contains("B_"))
-    //G4cout<<"Yes!! "<<namePrePV<<G4endl;
+	//else if ( namePrePV.contains("F_") || namePrePV.contains("B_"))
+	else if ( namePreLV.contains("tracker_bar") )
+	{
+    //G4cerr<<"Yes!! "<<namePrePV<<G4endl;
 		m_EA -> AddEDepTr(m_DM -> GetTrIDFromTrName(namePrePV), eDep);
+	}
 
 }
