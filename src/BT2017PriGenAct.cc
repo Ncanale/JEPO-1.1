@@ -132,8 +132,8 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	PG -> SetParticleMomentumDirection(m_MomDir);
 
 	// 2D Gaussian
-	G4double dX = G4RandGauss::shoot(0., m_BeamDX / mm / 3.0); // 3 sigma
-	G4double dY = G4RandGauss::shoot(0., m_BeamDY / mm / 3.0); // 3 sigma
+	G4double dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
+	G4double dY = G4RandGauss::shoot(0., m_BeamDY / mm / 1.0); // 1 sigma
     
 	m_GunPos = G4ThreeVector(m_BeamPX + dX * mm, m_BeamPY + dY * mm, m_BeamPZ*mm);
 	PG->SetParticlePosition(m_GunPos);
