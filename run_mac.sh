@@ -24,18 +24,18 @@ sed -i .bak "s+/run/beamOn.*+/run/beamOn $n_events+" ../n_event.mac
 sed -i .bak "s/G4int NoE = .*/G4int NoE = $n_events;/" ../src/BT2017PriGenAct.cc
 sed -i .bak "s/G4double Smear = .*/G4double Smear = $Smearing;/" ../src/BT2017EveAct.cc
 
-sed -i .bak "s/^int n_runs.*/int n_runs = $n_runs;/" output/Simulation_runner.cpp
-sed -i .bak "s/^const int nth.*/const int nth = $n_cores;/" output/Simulation_runner.cpp
-sed -i .bak "s/^int Energy.*/int Energy = $energy;/" output/Simulation_runner.cpp
-sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" output/Simulation_runner.cpp
-#sed -i .bak "s+^string path_name.*+string path_name = \"$(pwd)/output/\";+" output/Simulation_runner.cpp
-sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" output/Simulation_runner.cpp
-sed -i .bak "s+^string Target.*+string Target = \"$target\";+" output/Simulation_runner.cpp
+sed -i .bak "s/^int n_runs.*/int n_runs = $n_runs;/" ../output/Simulation_runner.cpp
+sed -i .bak "s/^const int nth.*/const int nth = $n_cores;/" ../output/Simulation_runner.cpp
+sed -i .bak "s/^int Energy.*/int Energy = $energy;/" ../output/Simulation_runner.cpp
+sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" ../output/Simulation_runner.cpp
+#sed -i .bak "s+^string path_name.*+string path_name = \"$(pwd)/../output/\";+" ../output/Simulation_runner.cpp
+sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" ../output/Simulation_runner.cpp
+sed -i .bak "s+^string Target.*+string Target = \"$target\";+" ../output/Simulation_runner.cpp
 
-sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
-sed -i .bak "s/^Target= .*/Target= \"$target\"/" output/Peak_fitter.py
-sed -i .bak "s/^Smearing=.*/Smearing=$Smearing/" output/Peak_fitter.py
-sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
+sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" ../output/Peak_fitter.py
+sed -i .bak "s/^Target= .*/Target= \"$target\"/" ../output/Peak_fitter.py
+sed -i .bak "s/^Smearing=.*/Smearing=$Smearing/" ../output/Peak_fitter.py
+sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" ../output/Peak_fitter.py
 
 sed -i .bak "s/^PARTICLENAME.*/PARTICLENAME            $particle/" ../config.cfg
 sed -i .bak "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" ../config.cfg

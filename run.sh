@@ -24,18 +24,18 @@ sed -i "s+/run/beamOn.*+/run/beamOn $n_events+" ../source/n_event.mac
 sed -i "s/G4int NoE = .*/G4int NoE = $n_events;/" ../source/src/BT2017PriGenAct.cc
 sed -i "s/G4double Smear = .*/G4double Smear = $Smearing;/" ../source/src/BT2017EveAct.cc
 
-sed -i "s/^int n_runs.*/int n_runs = $n_runs;/" output/Simulation_runner.cpp
-sed -i "s/^const int nth.*/const int nth = $n_cores;/" output/Simulation_runner.cpp
-sed -i "s/^int Energy.*/int Energy = $energy;/" output/Simulation_runner.cpp
-sed -i "s/^bool configuration.*/bool configuration = $configuration;/" output/Simulation_runner.cpp
-#sed -i "s+^string path_name.*+string path_name = \"$(pwd)/output/\";+" output/Simulation_runner.cpp
-sed -i "s+^string Particle.*+string Particle = \"$particle\";+" output/Simulation_runner.cpp
-sed -i "s+^string Target.*+string Target = \"$target\";+" output/Simulation_runner.cpp
+sed -i "s/^int n_runs.*/int n_runs = $n_runs;/" ../source/output/Simulation_runner.cpp
+sed -i "s/^const int nth.*/const int nth = $n_cores;/" ../source/output/Simulation_runner.cpp
+sed -i "s/^int Energy.*/int Energy = $energy;/" ../source/output/Simulation_runner.cpp
+sed -i "s/^bool configuration.*/bool configuration = $configuration;/" ../source/output/Simulation_runner.cpp
+#sed -i "s+^string path_name.*+string path_name = \"$(pwd)/output/\";+" ../source/output/Simulation_runner.cpp
+sed -i "s+^string Particle.*+string Particle = \"$particle\";+" ../source/output/Simulation_runner.cpp
+sed -i "s+^string Target.*+string Target = \"$target\";+" ../source/output/Simulation_runner.cpp
 
-sed -i "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
-sed -i "s/^Target= .*/Target= \"$target\"/" output/Peak_fitter.py
-sed -i "s/^Smearing=.*/Smearing=$Smearing/" output/Peak_fitter.py
-sed -i "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
+sed -i "s/^n_runs      = .*/n_runs      = $n_runs/" ../source/output/Peak_fitter.py
+sed -i "s/^Target= .*/Target= \"$target\"/" ../source/output/Peak_fitter.py
+sed -i "s/^Smearing=.*/Smearing=$Smearing/" ../source/output/Peak_fitter.py
+sed -i "s/^configuration.*/configuration = \"$configuration\"/" ../source/output/Peak_fitter.py
 
 sed -i "s/^PARTICLENAME.*/PARTICLENAME            $particle/" ../source/config.cfg
 sed -i "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" ../source/config.cfg
