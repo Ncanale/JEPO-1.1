@@ -27,7 +27,7 @@ spect_th    = 0.05
 
 Target= "Empty"
 Smearing=0.26
-Energy=270
+Energy=100
 
 sigmas = []
 units  = []
