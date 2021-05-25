@@ -8,7 +8,7 @@ n_runs=5
 particle=deuteron
 #target=C
 target=Empty
-energy=250
+energy=270
 file_name="${particle}${target}-${energy}MeV"
 
 #detector properties

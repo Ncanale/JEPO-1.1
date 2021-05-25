@@ -8,6 +8,12 @@ Geant4 Simulation of Polarimeter setup of COSY Storage Ring
 1. create folder "build" inside the source root folder
 2. run `cmake ..` from build
 
+(or)
+
+1. run build.sh or build_mac.sh
+
+custom experiments can be run by using/modifying run.sh
+
 ##################################################
 #   History                                      #
 ##################################################
