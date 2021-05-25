@@ -7,19 +7,19 @@
 #include <algorithm>
 #include <valarray>
 
-
+/*
 //comment this section if ROOT is installed from source
-// #include <root/TCanvas.h>
-// #include <root/TChain.h>
-// #include <root/TH1.h>
-// #include <root/TLeaf.h>
-// #include <root/TH2.h>
-// #include <root/TThread.h>
-// #include <root/TROOT.h>
-// #include <root/TRandom3.h>
-// #include <root/TFile.h>
-// #include <root/TError.h>
-
+#include <root/TCanvas.h>
+#include <root/TChain.h>
+#include <root/TH1.h>
+#include <root/TLeaf.h>
+#include <root/TH2.h>
+#include <root/TThread.h>
+#include <root/TROOT.h>
+#include <root/TRandom3.h>
+#include <root/TFile.h>
+#include <root/TError.h>
+*/
 
 #define PERPENDICULAR 0
 #define PARALLEL 1
