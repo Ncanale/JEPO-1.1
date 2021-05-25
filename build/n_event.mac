@@ -1,0 +1,7 @@
+#
+#
+#
+
+/run/beamOn 100000
+
+/control/shell killall jepo

@@ -1,0 +1,28 @@
+/vis/open OGL 1000x1000-0+0
+#/vis/ogl/set/displayListLimit 100
+
+/vis/viewer/set/autoRefresh true
+/vis/viewer/set/style surface
+/vis/viewer/set/hiddenMarker true
+/vis/viewer/set/hiddenEdge true
+/vis/viewer/set/viewpointThetaPhi 120 45
+/vis/viewer/set/background black # avaiable colour: black, blue, brown, cyan, gray, green, grey, magenta, red, white, yellow
+
+/vis/verbose errors
+/vis/verbose warnings
+
+/vis/drawVolume
+
+/vis/scene/add/axes -200 200 0 200 mm
+/vis/scene/add/trajectories smooth
+/vis/scene/endOfEventAction accumulate 10000
+
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/default/setDrawStepPts false
+/vis/modeling/trajectories/drawByParticleID-0/default/setStepPtsSize 2
+
+/vis/geometry/set/visibility labLV 0 false # hide the lab volume
+
+# These lines are to avoid a bug related to hiddenEdge... Please don't mind.
+#/vis/set/touchable labPV 0 B1_steel 0.5
+#/vis/touchable/set/visibility false
