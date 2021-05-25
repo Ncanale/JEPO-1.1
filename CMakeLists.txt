@@ -72,9 +72,8 @@ set(JEPO_SCRIPTS
 	init_vis.mac
 	vis.mac
 	config.cfg
-	1M_event.mac
-	10k_event.mac
-	100k_event.mac
+	run.sh
+	run_mac.sh
 	n_event.mac
 )
 
@@ -86,16 +85,29 @@ foreach(_script ${JEPO_SCRIPTS})
 	)
 endforeach()
 
+set(OUTPUT_SCRIPTS
+	Simulation_runner.cpp
+	Peak_fitter.py
+)
+
+foreach(_script ${OUTPUT_SCRIPTS})
+	configure_file(
+		${PROJECT_SOURCE_DIR}/output/${_script}
+		${PROJECT_BINARY_DIR}/output/${_script}
+		COPYONLY
+	)
+endforeach()
+
 #------------------------------------------------------------------------------#
 #   For internal Geant4 use - but has no effect if you build this jepo #
 # standalone                                                                   #
 #------------------------------------------------------------------------------#
-add_custom_target(JEPO DEPENDS jepo)
+#add_custom_target(JEPO DEPENDS jepo)
 
 #------------------------------------------------------------------------------#
 #   Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX       #
 #------------------------------------------------------------------------------#
 #install(TARGETS jepo Analysis DESTINATION bin)
-install(TARGETS jepo DESTINATION bin)
-install(FILES "${PROJECT_BINARY_DIR}/libAnalysis_rdict.pcm" DESTINATION .)
+#install(TARGETS jepo DESTINATION bin)
+#install(FILES "${PROJECT_BINARY_DIR}/libAnalysis_rdict.pcm" DESTINATION .)
 
