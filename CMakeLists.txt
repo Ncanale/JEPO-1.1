@@ -42,7 +42,7 @@ include(${ROOT_USE_FILE})
 #------------------------------------------------------------------------------#
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
-file(GLOB analysers ${PROJECT_SOURCE_DIR}/output/*)
+#file(GLOB analysers ${PROJECT_SOURCE_DIR}/output/*)
 
 #------------------------------------------------------------------------------#
 #   Set everything needed for the root dictonary and create the dictionary     #
@@ -59,7 +59,7 @@ file(GLOB analysers ${PROJECT_SOURCE_DIR}/output/*)
 #------------------------------------------------------------------------------#
 #   Add the executable, and link it to the Geant4 libraries                    #
 #------------------------------------------------------------------------------#
-add_executable(jepo jepo.cc ${sources} ${headers} ${analysers})
+add_executable(jepo jepo.cc ${sources} ${headers})# ${analysers})
 
 target_link_libraries(jepo ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})# Analysis)
 
