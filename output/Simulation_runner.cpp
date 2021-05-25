@@ -9,16 +9,16 @@
 
 
 //comment this section if ROOT is installed from source
-#include <root/TCanvas.h>
-#include <root/TChain.h>
-#include <root/TH1.h>
-#include <root/TLeaf.h>
-#include <root/TH2.h>
-#include <root/TThread.h>
-#include <root/TROOT.h>
-#include <root/TRandom3.h>
-#include <root/TFile.h>
-#include <root/TError.h>
+// #include <root/TCanvas.h>
+// #include <root/TChain.h>
+// #include <root/TH1.h>
+// #include <root/TLeaf.h>
+// #include <root/TH2.h>
+// #include <root/TThread.h>
+// #include <root/TROOT.h>
+// #include <root/TRandom3.h>
+// #include <root/TFile.h>
+// #include <root/TError.h>
 
 
 #define PERPENDICULAR 0
@@ -43,7 +43,7 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14;
-const int nth = 8;
+const int nth = 6;
 
 valarray<Long64_t> EC(Long64_t(0),nth);
 array<TH2F*,nth> Hmap;
