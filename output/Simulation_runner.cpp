@@ -79,27 +79,27 @@ bool is_nan(Double_t x) { return isnan(x); }
 
 void* SR_func (void* ptr)
 {
-  Long64_t* N = (Long64_t*) ptr;
-  cout<<"Running Thread: "<<N[0]<<endl;
-  for(auto i=N[1]; i<N[2]; i++)
+  Long64_t* M = (Long64_t*) ptr;
+  cout<<"Running Thread: "<<M[0]<<endl;
+  for(auto i=M[1]; i<M[2]; i++)
   {
-    t[N[0]]->GetEntry(i);
+    t[M[0]]->GetEntry(i);
     
     for(int j=0; j<CN; j++)
     {
-      F[N[0]][j] = t[N[0]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
-      B[N[0]][j] = t[N[0]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
+      F[M[0]][j] = t[M[0]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
+      B[M[0]][j] = t[M[0]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
       
-      //cout<<N[0]<<": "<<F[N[0]][j]<<", "<<B[N[0]][j]<<", "<<(F[N[0]][j] && B[N[0]][j])<<endl;
+      //cout<<M[0]<<": "<<F[M[0]][j]<<", "<<B[M[0]][j]<<", "<<(F[M[0]][j] && B[M[0]][j])<<endl;
       
       if(plot_signals)
       {
-        Hf[N[0]][j]->Fill(F[N[0]][j]);
-        Hb[N[0]][j]->Fill(B[N[0]][j]);
+        Hf[M[0]][j]->Fill(F[M[0]][j]);
+        Hb[M[0]][j]->Fill(B[M[0]][j]);
       }
       
-      //F[N[0]][j] = (isnan(F[N[0]][j]) ? 0 : F[N[0]][j]);
-      //B[N[0]][j] = (isnan(B[N[0]][j]) ? 0 : B[N[0]][j]);
+      //F[M[0]][j] = (isnan(F[M[0]][j]) ? 0 : F[M[0]][j]);
+      //B[M[0]][j] = (isnan(B[M[0]][j]) ? 0 : B[M[0]][j]);
     }
     
     Double_t xB=std::numeric_limits<double>::quiet_NaN(), yF=std::numeric_limits<double>::quiet_NaN();
@@ -109,41 +109,41 @@ void* SR_func (void* ptr)
     {
       for(int r=CN/2; r<CN; r++)
       {
-        //cout<<N[0]<<": CN/2 = "<<CN/2<<endl;
-        if((F[N[0]][q] && F[N[0]][r]) && (!isnan(F[N[0]][q]) && !isnan(F[N[0]][r])))
+        //cout<<M[0]<<": CN/2 = "<<CN/2<<endl;
+        if((F[M[0]][q] && F[M[0]][r]) && (!isnan(F[M[0]][q]) && !isnan(F[M[0]][r])))
         {
-          etaF[N[0]][q][r] = (F[N[0]][q] - F[N[0]][r]) / (F[N[0]][q] + F[N[0]][r]);
-          //cout<<N[0]<<": q = "<<q<<"; r = "<<r<<"; etaF = "<<etaF[N[0]][q][r]<<endl;
-          HetaF[N[0]][q][r]->Fill(etaF[N[0]][q][r]);
-          if(plot_ratios) HratioF[N[0]][q][r]->Fill(F[N[0]][q],F[N[0]][r]);
-          yF = 6*(3-q) + 3*(1-etaF[N[0]][q][r])*(7.5+q-r) - 1.5;
+          etaF[M[0]][q][r] = (F[M[0]][q] - F[M[0]][r]) / (F[M[0]][q] + F[M[0]][r]);
+          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; etaF = "<<etaF[M[0]][q][r]<<endl;
+          HetaF[M[0]][q][r]->Fill(etaF[M[0]][q][r]);
+          if(plot_ratios) HratioF[M[0]][q][r]->Fill(F[M[0]][q],F[M[0]][r]);
+          yF = 6*(3-q) + 3*(1-etaF[M[0]][q][r])*(7.5+q-r) - 1.5;
           Fiv = {q,r};
           tF = 1;
         }
-        else if((count_if(F[N[0]].begin(),F[N[0]].end(),is_nan)==(CN-1)) && (!isnan(F[N[0]][q]) || !isnan(F[N[0]][r])))
+        else if((count_if(F[M[0]].begin(),F[M[0]].end(),is_nan)==(CN-1)) && (!isnan(F[M[0]][q]) || !isnan(F[M[0]][r])))
         {
-          //cout<<N[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on F"<<endl;
-          if(!isnan(F[N[0]][q])) yF = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
-          if(!isnan(F[N[0]][r])) yF = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on F"<<endl;
+          if(!isnan(F[M[0]][q])) yF = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          if(!isnan(F[M[0]][r])) yF = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
           tF = 2;
         }
-        if((B[N[0]][q] && B[N[0]][r]) && (!isnan(B[N[0]][q]) && !isnan(B[N[0]][r])))
+        if((B[M[0]][q] && B[M[0]][r]) && (!isnan(B[M[0]][q]) && !isnan(B[M[0]][r])))
         {
-          //cout<<N[0]<<": q = "<<q<<"; r = "<<r<<"; NO etaB yet!"<<endl;
-          etaB[N[0]][q][r] = (B[N[0]][q] - B[N[0]][r]) / (B[N[0]][q] + B[N[0]][r]);
-          //cout<<N[0]<<": q = "<<q<<"; r = "<<r<<"; etaB = "<<etaB[N[0]][q][r]<<endl;
-          HetaB[N[0]][q][r]->Fill(etaB[N[0]][q][r]);
-          //if(plot_ratios && F[N[0]][0]>5 && F[N[0]][0]<10 && F[N[0]][2]>8 && F[N[0]][2]<13) HratioB[N[0]][q][r]->Fill(B[N[0]][q],B[N[0]][r]);
-          if(plot_ratios) HratioB[N[0]][q][r]->Fill(B[N[0]][q],B[N[0]][r]);
-          xB = 6*(3-q) + 3*(1-etaB[N[0]][q][r])*(7.5+q-r) - 1.5;
+          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; NO etaB yet!"<<endl;
+          etaB[M[0]][q][r] = (B[M[0]][q] - B[M[0]][r]) / (B[M[0]][q] + B[M[0]][r]);
+          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; etaB = "<<etaB[M[0]][q][r]<<endl;
+          HetaB[M[0]][q][r]->Fill(etaB[M[0]][q][r]);
+          //if(plot_ratios && F[M[0]][0]>5 && F[M[0]][0]<10 && F[M[0]][2]>8 && F[M[0]][2]<13) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
+          if(plot_ratios) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
+          xB = 6*(3-q) + 3*(1-etaB[M[0]][q][r])*(7.5+q-r) - 1.5;
           Biv = {q,r};
           tB = 1;
         }
-        else if((count_if(B[N[0]].begin(),B[N[0]].end(),is_nan)==(CN-1)) && (!isnan(B[N[0]][q]) || !isnan(B[N[0]][r])))
+        else if((count_if(B[M[0]].begin(),B[M[0]].end(),is_nan)==(CN-1)) && (!isnan(B[M[0]][q]) || !isnan(B[M[0]][r])))
         {
-          //cout<<N[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on B"<<endl;
-          if(!isnan(B[N[0]][q])) xB = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
-          if(!isnan(B[N[0]][r])) xB = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on B"<<endl;
+          if(!isnan(B[M[0]][q])) xB = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          if(!isnan(B[M[0]][r])) xB = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
           tB = 2;
         }
       }
@@ -153,21 +153,21 @@ void* SR_func (void* ptr)
     {
       Double_t xl = (d_lyso/l2)*xB;
       Double_t yl = (d_lyso/l1)*yF;
-      if(plot_map) Hmap[N[0]]->Fill(xl,yl);
-      if(plot_slices) HRa[N[0]]->Fill(sqrt(xl*xl + yl*yl));
-      if(plot_slices) HTh[N[0]]->Fill(atan2(yl,xl));
+      if(plot_map) Hmap[M[0]]->Fill(xl,yl);
+      if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
+      if(plot_slices) HTh[M[0]]->Fill(atan2(yl,xl));
     }
     
 		//if (tB == 1) cout<<tF<<", "<<tB<<endl;
     if ((tF == 1) && (tB == 1) && plot_offsets)
     {
 			//cout<<Fiv[0]<<", "<<Fiv[1]<<", "<<Biv[0]<<", "<<Biv[1]<<endl;
-      Hoff[N[0]][Fiv[0]][Fiv[1]]->Fill(etaF[N[0]][Fiv[0]][Fiv[1]] - etaB[N[0]][Biv[0]][Biv[1]]);
+      Hoff[M[0]][Fiv[0]][Fiv[1]]->Fill(etaF[M[0]][Fiv[0]][Fiv[1]] - etaB[M[0]][Biv[0]][Biv[1]]);
     }
     
-    //cout<<N[0]<<": CN/2 = "<<CN/2<<endl;
-    //if(i%10000==0) cout<<F[N[0]][0]<<", "<<B[N[0]][0]<<", "<<(F[N[0]][0] && B[N[0]][0])<<endl;
-    EC[N[0]]++;
+    //cout<<M[0]<<": CN/2 = "<<CN/2<<endl;
+    //if(i%10000==0) cout<<F[M[0]][0]<<", "<<B[M[0]][0]<<", "<<(F[M[0]][0] && B[M[0]][0])<<endl;
+    EC[M[0]]++;
   }
   return 0;
 }
@@ -301,7 +301,7 @@ void Simulation_runner()
     
     vector<array<int,2>> ECs;
     for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) if(HratioFm[i][j]->GetEntries()>0) ECs.push_back({i,j});
-    for(int i=0; i<ECs.size(); i++)
+    for(unsigned int i=0; i<ECs.size(); i++)
     {
       HratioFm[ECs[i][0]][ECs[i][1]]->Write();
       HratioFm[ECs[i][0]][ECs[i][1]]->Draw("COLZ");
@@ -310,7 +310,7 @@ void Simulation_runner()
     
     ECs.clear();
     for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) if(HratioBm[i][j]->GetEntries()>0) ECs.push_back({i,j});
-    for(int i=0; i<ECs.size(); i++)
+    for(unsigned int i=0; i<ECs.size(); i++)
     {
       HratioBm[ECs[i][0]][ECs[i][1]]->Write();
       HratioBm[ECs[i][0]][ECs[i][1]]->Draw("COLZ");
@@ -349,7 +349,7 @@ void Simulation_runner()
 
 		vector<array<int,2>> ECs;
     for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) if(Hoffm[i][j]->GetEntries()>0) ECs.push_back({i,j});
-    for(int i=0; i<ECs.size(); i++)
+    for(unsigned int i=0; i<ECs.size(); i++)
     {
 			cEta->cd(1);
 			HetaFm[ECs[i][0]][ECs[i][1]]->Draw();
