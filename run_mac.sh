@@ -6,8 +6,8 @@ n_runs=5
 
 #beam properties
 particle=deuteron
-#target=C
-target=Empty
+target=C
+# target=Empty
 energy=270
 file_name="${particle}${target}-${energy}MeV"
 
@@ -19,33 +19,34 @@ Smearing=0.26
 rm -r output/${particle}*-*
 
 #echo -e "\e[31mNumber of events: $n_events \e[39m..."
-sed -i .bak "s+/run/beamOn.*+/run/beamOn $n_events+" ../JEPO-1.1/n_event.mac
+sed -i .bak "s+/run/beamOn.*+/run/beamOn $n_events+" n_event.mac
 #echo -e "\e[31mNumber of events: $n_events \e[39m..."
 sed -i .bak "s/G4int NoE = .*/G4int NoE = $n_events;/" ../JEPO-1.1/src/BT2017PriGenAct.cc
 sed -i .bak "s/G4double Smear = .*/G4double Smear = $Smearing;/" ../JEPO-1.1/src/BT2017EveAct.cc
 
-sed -i .bak "s/^int n_runs.*/int n_runs = $n_runs;/" ../JEPO-1.1/output/Simulation_runner.cpp
-sed -i .bak "s/^const int nth.*/const int nth = $n_cores;/" ../JEPO-1.1/output/Simulation_runner.cpp
-sed -i .bak "s/^int Energy.*/int Energy = $energy;/" ../JEPO-1.1/output/Simulation_runner.cpp
-sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" ../JEPO-1.1/output/Simulation_runner.cpp
-#sed -i .bak "s+^string path_name.*+string path_name = \"$(pwd)/../JEPO-1.1/output/\";+" ../JEPO-1.1/output/Simulation_runner.cpp
-sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" ../JEPO-1.1/output/Simulation_runner.cpp
-sed -i .bak "s+^string Target.*+string Target = \"$target\";+" ../JEPO-1.1/output/Simulation_runner.cpp
+sed -i .bak "s/^int n_runs.*/int n_runs = $n_runs;/" output/Simulation_runner.cpp
+sed -i .bak "s/^const int nth.*/const int nth = $n_cores;/" output/Simulation_runner.cpp
+sed -i .bak "s/^int Energy.*/int Energy = $energy;/" output/Simulation_runner.cpp
+sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" output/Simulation_runner.cpp
+#sed -i .bak "s+^string path_name.*+string path_name = \"$(pwd)/output/\";+" output/Simulation_runner.cpp
+sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" output/Simulation_runner.cpp
+sed -i .bak "s+^string Target.*+string Target = \"$target\";+" output/Simulation_runner.cpp
 
-sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" ../JEPO-1.1/output/Peak_fitter.py
-sed -i .bak "s/^Target= .*/Target= \"$target\"/" ../JEPO-1.1/output/Peak_fitter.py
-sed -i .bak "s/^Smearing=.*/Smearing=$Smearing/" ../JEPO-1.1/output/Peak_fitter.py
-sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" ../JEPO-1.1/output/Peak_fitter.py
+sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
+sed -i .bak "s/^Target.*/Target = \"$target\"/" output/Peak_fitter.py
+sed -i .bak "s/^Energy.*/Energy = $energy/" output/Peak_fitter.py
+sed -i .bak "s/^Smearing.*/Smearing = $Smearing/" output/Peak_fitter.py
+sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
 
-sed -i .bak "s/^PARTICLENAME.*/PARTICLENAME            $particle/" ../JEPO-1.1/config.cfg
-sed -i .bak "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" ../JEPO-1.1/config.cfg
-sed -i .bak "s/^TRACKERCONFIG.*/TRACKERCONFIG	$configuration/" ../JEPO-1.1/config.cfg
+sed -i .bak "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
+sed -i .bak "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" config.cfg
+sed -i .bak "s/^TRACKERCONFIG.*/TRACKERCONFIG	$configuration/" config.cfg
 
-sed -i .bak "s/USETARGET.*/USETARGET		    OFF/" ../JEPO-1.1/config.cfg
+sed -i .bak "s/USETARGET.*/USETARGET		    OFF/" config.cfg
 if [[ "$target" != "Empty" ]]
 then
-    sed -i .bak "s/USETARGET.*/USETARGET		    ON/" ../JEPO-1.1/config.cfg
-    sed -i .bak "s/TARGETMATERIAL.*/TARGETMATERIAL		$target/" ../JEPO-1.1/config.cfg
+    sed -i .bak "s/USETARGET.*/USETARGET		    ON/" config.cfg
+    sed -i .bak "s/TARGETMATERIAL.*/TARGETMATERIAL		$target/" config.cfg
 fi
 
 make -j6
@@ -75,6 +76,6 @@ Target: $target
 Energy: $energy
 Smearing: $Smearing
 Configuration: $configuration" > "details_$(date).txt"
-root -q Simulation_runner.cpp
+root -q -l Simulation_runner.cpp
 python3 Peak_fitter.py
 cd ..
