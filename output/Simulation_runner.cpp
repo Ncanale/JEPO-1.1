@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <valarray>
 
+//comment this section if ROOT is installed from source
 #include <root/TCanvas.h>
 #include <root/TChain.h>
 #include <root/TH1.h>
