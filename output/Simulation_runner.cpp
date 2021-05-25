@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <valarray>
 
+/*
 //comment this section if ROOT is installed from source
 #include <root/TCanvas.h>
 #include <root/TChain.h>
@@ -18,6 +19,7 @@
 #include <root/TRandom3.h>
 #include <root/TFile.h>
 #include <root/TError.h>
+*/
 
 #define PERPENDICULAR 0
 #define PARALLEL 1

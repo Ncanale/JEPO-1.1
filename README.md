@@ -2,6 +2,13 @@
 Geant4 Simulation of Polarimeter setup of COSY Storage Ring
 
 ##################################################
+#   Instructions                                      #
+##################################################
+
+1. create folder "build" inside the source root folder
+2. run `cmake ..` from build
+
+##################################################
 #   History                                      #
 ##################################################
 
