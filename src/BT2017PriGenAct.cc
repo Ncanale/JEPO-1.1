@@ -119,9 +119,12 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
     }
     
 	// chosing the direction of momentum and rotating if
+	
 	m_MomDir.set( sin(m_beamAxisTheta) *cos(m_beamAxisPhi), // X
                   sin(m_beamAxisTheta) *sin(m_beamAxisPhi), // Y
                   cos(m_beamAxisTheta) );                   // Z
+	
+	//m_MomDir.set(0,0,1);
     
 	m_matrix = new G4RotationMatrix;
 	m_matrix->rotateY( -m_MomDir.x());
@@ -136,6 +139,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	G4double dY = G4RandGauss::shoot(0., m_BeamDY / mm / 1.0); // 1 sigma
     
 	m_GunPos = G4ThreeVector(m_BeamPX + dX * mm, m_BeamPY + dY * mm, m_BeamPZ*mm);
+	//m_GunPos = G4ThreeVector(660 * sin(m_beamAxisTheta) * cos(m_beamAxisPhi) + dX, 660 * sin(m_beamAxisTheta) *sin(m_beamAxisPhi) + dY, m_BeamPZ);
 	PG->SetParticlePosition(m_GunPos);
 
 	PG->GeneratePrimaryVertex(event);

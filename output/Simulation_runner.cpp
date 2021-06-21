@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <valarray>
 
-/*
+
 //comment this section if ROOT is installed from source
 #include <root/TCanvas.h>
 #include <root/TChain.h>
@@ -19,7 +19,7 @@
 #include <root/TRandom3.h>
 #include <root/TFile.h>
 #include <root/TError.h>
-*/
+
 
 #define PERPENDICULAR 0
 #define PARALLEL 1
@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ROOT;
 
-int n_runs = 5;
+int n_runs = 4;
 int n_steps = 7;
 Long64_t N;
 string path_name = "";
@@ -46,7 +46,7 @@ const int CN = 14;
 const int nth = 6;
 
 valarray<Long64_t> EC(Long64_t(0),nth);
-array<TH2F*,nth> Hmap;
+array<TH2F*,nth> Hmap,Hmap_2;
 array<TH1F*,nth> HRa, HTh;
 array<array<TH1F*,CN>,nth> Hf, Hb;
 array<array<array<TH1F*,CN>,CN>,nth> HetaF, HetaB, Hoff;
@@ -61,10 +61,10 @@ array<TChain*,nth> t;
 
 TRandom3 tr;
 
-Double_t fw = 0.1;
-Double_t d_lyso = 66.0;
-Double_t l1 = d_lyso - 7.0;
-Double_t l2 = d_lyso - 5.0;
+Double_t fw = 0.0;						//error in measurement when particle incidents at edge of one tracker
+Double_t d_lyso = 66.0;				//distance of source from start of lysos
+Double_t dF = d_lyso - 7.0;		//distance of source from start of front layer 
+Double_t dB = d_lyso - 5.0;		//distance of source from start of back layer
 
 // configuration can be set to perpendicular or parallel
 bool configuration = PERPENDICULAR;
@@ -103,6 +103,7 @@ void* SR_func (void* ptr)
     }
     
     Double_t xB=std::numeric_limits<double>::quiet_NaN(), yF=std::numeric_limits<double>::quiet_NaN();
+    Double_t zB=std::numeric_limits<double>::quiet_NaN(), zF=std::numeric_limits<double>::quiet_NaN();
     int tF=0, tB=0;
     array<int,2> Fiv, Biv;      //index values
     for(int q=0; q<CN/2; q++)
@@ -116,15 +117,19 @@ void* SR_func (void* ptr)
           //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; etaF = "<<etaF[M[0]][q][r]<<endl;
           HetaF[M[0]][q][r]->Fill(etaF[M[0]][q][r]);
           if(plot_ratios) HratioF[M[0]][q][r]->Fill(F[M[0]][q],F[M[0]][r]);
-          yF = 6*(3-q) + 3*(1-etaF[M[0]][q][r])*(7.5+q-r) - 1.5;
+					int ep = r - q - 7;
+					double d = dF + pow(-1,ep) + 1;
+					zF = 1 + pow(-1,ep+1)*etaF[M[0]][q][r];
+          //yF = 6*(3-q) + 3*(1-etaF[M[0]][q][r])*(7.5+q-r) - 1.5;
+          yF = zF * (1.5*zF + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zF*pow(-1,ep+1));
           Fiv = {q,r};
           tF = 1;
         }
         else if((count_if(F[M[0]].begin(),F[M[0]].end(),is_nan)==(CN-1)) && (!isnan(F[M[0]][q]) || !isnan(F[M[0]][r])))
         {
           //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on F"<<endl;
-          if(!isnan(F[M[0]][q])) yF = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
-          if(!isnan(F[M[0]][r])) yF = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          //if(!isnan(F[M[0]][q])) yF = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5; 
+          //if(!isnan(F[M[0]][r])) yF = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
           tF = 2;
         }
         if((B[M[0]][q] && B[M[0]][r]) && (!isnan(B[M[0]][q]) && !isnan(B[M[0]][r])))
@@ -135,15 +140,19 @@ void* SR_func (void* ptr)
           HetaB[M[0]][q][r]->Fill(etaB[M[0]][q][r]);
           //if(plot_ratios && F[M[0]][0]>5 && F[M[0]][0]<10 && F[M[0]][2]>8 && F[M[0]][2]<13) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
           if(plot_ratios) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
-          xB = 6*(3-q) + 3*(1-etaB[M[0]][q][r])*(7.5+q-r) - 1.5;
+					int ep = r - q - 7;
+					double d = dB + pow(-1,ep) + 1;
+					zB = 1 + pow(-1,ep+1)*etaB[M[0]][q][r];
+          //xB = 6*(3-q) + 3*(1-etaB[M[0]][q][r])*(7.5+q-r) - 1.5;
+          xB = zB * (1.5*zB + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zB*pow(-1,ep+1));
           Biv = {q,r};
           tB = 1;
         }
         else if((count_if(B[M[0]].begin(),B[M[0]].end(),is_nan)==(CN-1)) && (!isnan(B[M[0]][q]) || !isnan(B[M[0]][r])))
         {
           //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on B"<<endl;
-          if(!isnan(B[M[0]][q])) xB = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
-          if(!isnan(B[M[0]][r])) xB = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          //if(!isnan(B[M[0]][q])) xB = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
+          //if(!isnan(B[M[0]][r])) xB = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
           tB = 2;
         }
       }
@@ -151,9 +160,14 @@ void* SR_func (void* ptr)
     
     if(tF && tB)
     {
-      Double_t xl = (d_lyso/l2)*xB;
-      Double_t yl = (d_lyso/l1)*yF;
+      Double_t xl = (d_lyso/zB)*xB;
+      Double_t yl = (d_lyso/zF)*yF;
+      //Double_t xl = (d_lyso/dB)*xB;
+      //Double_t yl = (d_lyso/dF)*yF;
+      //Double_t xl = xB;			//Use this section for testing with cylindrical beam
+      //Double_t yl = yF;			//
       if(plot_map) Hmap[M[0]]->Fill(xl,yl);
+      if(plot_map) Hmap_2[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
       if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
       if(plot_slices) HTh[M[0]]->Fill(atan2(yl,xl));
     }
@@ -177,9 +191,10 @@ void init_vars()
   for(int i=0; i<nth; i++)
   {
     if(plot_map) Hmap[i] = new TH2F("Hmap", "X-Y Map;X;Y",500,-21,21,500,-21,21);
-    
-    if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",300,0,21);
-    if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",300,-4,4);
+    if(plot_map) Hmap_2[i] = new TH2F("Hmap_2", "R-#theta Map;#theta;R",500,-4,4,500,0,21);
+    if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
+    // if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",300,0,21);
+    if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",800,-4,4);
   }
   for(int i=0; i<CN; i++)
   {
@@ -327,7 +342,15 @@ void Simulation_runner()
     Hmapm->Draw("COLZ");
     cMap->SaveAs("XYmap.pdf","pdf");
     Hmapm->SaveAs("Hmap.root","root");
-		if(plot_slices)
+    
+    TH2F* Hmapm_2 = merge(Hmap_2);
+    TCanvas* cMap_2 = new TCanvas("cMap_2", "R-#theta Distribution", 1000, 1000);
+    Hmapm_2->Draw("COLZ");
+    cMap_2->SaveAs("RThmap.pdf","pdf");
+    Hmapm_2->SaveAs("Hmap_2.root","root");
+    
+		
+    if(plot_slices)
 		{
 			TH1F* HRam = merge(HRa),* HThm = merge(HTh);
 			TCanvas* cSliceTh = new TCanvas("cSliceTh", "Theta Distribution", 1000, 1000);
