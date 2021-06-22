@@ -2,6 +2,7 @@
 Geant4 Simulation of Polarimeter setup of COSY Storage Ring
 
 FORK rules!
+They dont GFU!!!
 
 ##################################################
 #   Instructions                                      #
