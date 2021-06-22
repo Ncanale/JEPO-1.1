@@ -43,6 +43,8 @@ BT2017RunAct::BT2017RunAct(BT2017ConMan* CM)
 	AM -> CreateNtupleDColumn("Kinetic_Energy");
 	AM -> CreateNtupleDColumn("theta_lab");
 	AM -> CreateNtupleDColumn("phi_lab");
+	AM -> CreateNtupleDColumn("position_X");
+	AM -> CreateNtupleDColumn("position_Y");
 
 	for ( int i = 0; i < 120; i++ )
 		if ( m_DetSet[i] ) AM -> CreateNtupleDColumn(DM -> GetDetNameFromDetID(i));

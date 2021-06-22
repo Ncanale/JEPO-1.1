@@ -163,6 +163,26 @@ G4double BT2017PriGenAct::GetPhi()
 	return m_beamAxisPhi;
 }
 
+
+//////////////////////////////////////////////////
+//                                              //
+//////////////////////////////////////////////////
+// returns the azimuth angle of particles momentum direction
+G4double BT2017PriGenAct::GetPosX()
+{
+	return m_BeamPX;
+}
+
+
+//////////////////////////////////////////////////
+//                                              //
+//////////////////////////////////////////////////
+// returns the azimuth angle of particles momentum direction
+G4double BT2017PriGenAct::GetPosY()
+{
+	return m_BeamPY;
+}
+
 //////////////////////////////////////////////////
 //                                              //
 //////////////////////////////////////////////////

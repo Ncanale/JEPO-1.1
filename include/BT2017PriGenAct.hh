@@ -94,6 +94,8 @@ class BT2017PriGenAct: public G4VUserPrimaryGeneratorAction
 	G4double GetTheta();
 	G4double GetPhi();
 	G4double GetKinEgy();
+	G4double GetPosX();
+	G4double GetPosY();
 	G4int GetParticle();
 	G4int GetGenEventID();
 };
