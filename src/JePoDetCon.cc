@@ -427,7 +427,7 @@ void JePoDetCon::ConstructMaterials()
 	m_DetMat -> AddElement(m_ElCe,  0.02/100.0);
 
 	// Plastic scintillator material
-	m_CouMat = new G4Material("PlasticScint", 1.032*g/cm3, 2, kStateSolid, labTemp);
+	m_CouMat = new G4Material("PlasticScint", 1.023*g/cm3, 2, kStateSolid, labTemp);
 	m_CouMat -> AddElement(m_ElC, 10);
 	m_CouMat -> AddElement(m_ElH, 11);
 

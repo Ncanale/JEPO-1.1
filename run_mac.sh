@@ -6,8 +6,8 @@ n_runs=5
 
 #beam properties
 particle=deuteron
-target=C
-# target=Empty
+# target=C
+target=Empty
 energy=270
 file_name="${particle}${target}-${energy}MeV"
 
@@ -38,6 +38,7 @@ sed -i .bak "s/^Energy.*/Energy = $energy/" output/Peak_fitter.py
 sed -i .bak "s/^Smearing.*/Smearing = $Smearing/" output/Peak_fitter.py
 sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
 
+sed -i .bak "s/^NTHREADS.*/NTHREADS		    $n_cores/" config.cfg
 sed -i .bak "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
 sed -i .bak "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" config.cfg
 sed -i .bak "s/^TRACKERCONFIG.*/TRACKERCONFIG	$configuration/" config.cfg
