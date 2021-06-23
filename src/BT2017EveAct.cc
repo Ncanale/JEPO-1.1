@@ -65,6 +65,8 @@ void BT2017EveAct::EndOfEventAction(const G4Event* anEvent)
 	AM -> FillNtupleDColumn(iDet++, m_prigenact -> GetKinEgy());
 	AM -> FillNtupleDColumn(iDet++, m_prigenact -> GetTheta());
 	AM -> FillNtupleDColumn(iDet++, m_prigenact -> GetPhi());
+	AM -> FillNtupleDColumn(iDet++, m_prigenact -> GetPosX());
+	AM -> FillNtupleDColumn(iDet++, m_prigenact -> GetPosY());
 
 	// filling initial parameters from generator
 	//
