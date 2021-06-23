@@ -20,14 +20,14 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 4
+n_runs      = 5
 spect_sigma = 2.25
 
 spect_th    = 0.05
 
 Target= "Empty"
-Smearing=0.0
-Energy=100
+Smearing=0.26
+Energy=270
 
 sigmas = []
 units  = []
