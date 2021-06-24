@@ -20,6 +20,7 @@
 #include <root/TRandom3.h>
 #include <root/TFile.h>
 #include <root/TError.h>
+#include <root/TLatex.h>
 
 
 #define PERPENDICULAR 0
@@ -126,7 +127,7 @@ void* SR_func(void* ptr)
 					if(plot_ratios) HratioF[M[0]][q][r]->Fill(F[M[0]][q],F[M[0]][r]);
 					ep = r - q - Tn;
 					zF = (1 + pow(-1,ep+1)*etaF[M[0]][q][r])*(Tt/2);
-					yF = zF * 1.5 * (11 - 4*q + (1 - etaF[M[0]][q][r])*pow(-1,ep)) / (dF + 1 + etaF[M[0]][q][r]);
+					yF = zF * (Tb/4) * (2*Tn - 4*q - 3 + (1 - etaF[M[0]][q][r])*pow(-1,ep)) / (dF + 1 + etaF[M[0]][q][r]);
 					Fiv = {q,r};
 					tF = 1;
 				}
@@ -141,7 +142,7 @@ void* SR_func(void* ptr)
 					if(plot_ratios) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
 					ep = r - q - Tn;
 					zB = (1 + pow(-1,ep+1)*etaB[M[0]][q][r])*Tt/2;
-					xB = zB * 1.5 * (11 - 4*q + (1 - etaB[M[0]][q][r])*pow(-1,ep)) / (dB + 1 + etaB[M[0]][q][r]);
+					xB = zB * (Tb/4) * (2*Tn - 4*q - 3 + (1 - etaB[M[0]][q][r])*pow(-1,ep)) / (dB + 1 + etaB[M[0]][q][r]);
 					Biv = {q,r};
 					tB = 1;
 				}
@@ -190,7 +191,7 @@ void init_vars()
 		if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
 		if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
-		if(plot_slices) HPh[i] = new TH1F("HTh", "#phi Distribution;#phi;Counts",800,-4,4);
+		if(plot_slices) HPh[i] = new TH1F("HPh", "#phi Distribution;#phi;Counts",800,-4,4);
 	}
 	for(int i=0; i<CN; i++)
 	{
@@ -337,7 +338,7 @@ void Simulation_runner()
 		HmapXYm->SaveAs("HmapXY.root","root");
 
 		TH2F* HmapRPm = merge(HmapRP);
-		TCanvas* cMap_2 = new TCanvas("cMap_2", "R-#phi Distribution", 1000, 1000);
+		TCanvas* cMap_2 = new TCanvas("cMap_2", "R-Phi Distribution", 1000, 1000);
 		HmapRPm->Draw("COLZ");
 		cMap_2->SaveAs("RPmap.pdf","pdf");
 		HmapRPm->SaveAs("HmapRP.root","root");
@@ -346,9 +347,9 @@ void Simulation_runner()
 		if(plot_slices)
 		{
 			TH1F* HRam = merge(HRa),* HPhm = merge(HPh);
-			TCanvas* cSliceTh = new TCanvas("cSliceTh", "Phi Distribution", 1000, 1000);
+			TCanvas* cSlicePh = new TCanvas("cSlicePh", "Phi Distribution", 1000, 1000);
 			HPhm->Draw();
-			cSliceTh->SaveAs("Slices.pdf(","pdf");
+			cSlicePh->SaveAs("Slices.pdf(","pdf");
 			HPhm->SaveAs("HPh.root","root");
 			TCanvas* cSliceR = new TCanvas("cSliceR", "R Distribution", 1000, 1000);
 			HRam->Draw();
@@ -365,7 +366,7 @@ void Simulation_runner()
 		HmapGXYm->SaveAs("HmapGXY.root","root");
 
 		TH2F* HmapGRPm = merge(HmapGRP);
-		TCanvas* cMap_4 = new TCanvas("cMap_4", "Generator R-#phi Distribution", 1000, 1000);
+		TCanvas* cMap_4 = new TCanvas("cMap_4", "Generator R-Phi Distribution", 1000, 1000);
 		HmapGRPm->Draw("COLZ");
 		cMap_4->SaveAs("GenRPmap.pdf","pdf");
 		HmapGRPm->SaveAs("HmapGRP.root","root");
