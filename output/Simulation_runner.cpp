@@ -9,6 +9,7 @@
 
 
 //comment this section if ROOT is installed from source
+/*
 #include <root/TCanvas.h>
 #include <root/TChain.h>
 #include <root/TH1.h>
@@ -19,7 +20,7 @@
 #include <root/TRandom3.h>
 #include <root/TFile.h>
 #include <root/TError.h>
-
+*/
 
 #define PERPENDICULAR 0
 #define PARALLEL 1
@@ -49,15 +50,17 @@ const int Tn = CN/2; //number of front facing modules
 const Double_t Tb = 6; //tracker module base in cm
 const Double_t Tt = 2; //tracker module thickness in cm
 
+
 valarray<Long64_t> EC(Long64_t(0),nth);
-array<TH2F*,nth> Hmap,Hmap_2;
-array<TH1F*,nth> HRa, HTh;
+array<TH2F*,nth> HmapXY,HmapRP,HmapGXY,HmapGRP;
+array<TH1F*,nth> HRa, HPh;
 array<array<TH1F*,CN>,nth> Hf, Hb;
 array<array<array<TH1F*,CN>,CN>,nth> HetaF, HetaB, Hoff;
 array<array<array<TH2F*,CN>,CN>,nth> HratioF, HratioB;
 
 array<string,CN> nameF, nameB;
 
+array<Double_t,nth> gunX, gunY, gunTh, gunPh;
 array<array<Double_t,CN>,nth> F, B;
 array<array<array<Double_t,CN>,CN>,nth> etaF, etaB;
 
@@ -78,6 +81,7 @@ bool plot_map = !configuration && true;
 bool plot_signals = false;
 bool plot_ratios = false;
 bool plot_offsets = configuration && true;
+bool plot_generator = true;
 
 bool is_nan(Double_t x) { return isnan(x); }
 
@@ -88,7 +92,15 @@ void* SR_func (void* ptr)
   for(auto i=M[1]; i<M[2]; i++)
   {
     t[M[0]]->GetEntry(i);
-    
+		
+		if(plot_generator)
+		{
+			gunX[M[0]] = t[M[0]]->GetLeaf("position_X")->GetTypedValue<float>();
+			gunY[M[0]] = t[M[0]]->GetLeaf("position_Y")->GetTypedValue<float>();
+			gunTh[M[0]] = t[M[0]]->GetLeaf("theta_lab")->GetTypedValue<float>();
+			gunPh[M[0]] = t[M[0]]->GetLeaf("phi_lab")->GetTypedValue<float>();
+		}
+		
     for(int j=0; j<CN; j++)
     {
       F[M[0]][j] = t[M[0]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
@@ -140,20 +152,30 @@ void* SR_func (void* ptr)
       }
     }
     
+    
     if(tF && tB)
     {
       Double_t xl = (d_lyso/zB)*xB;
       Double_t yl = (d_lyso/zF)*yF;
-      if(plot_map) Hmap[M[0]]->Fill(xl,yl);
-      if(plot_map) Hmap_2[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
+      if(plot_map) HmapXY[M[0]]->Fill(xl,yl);
+      if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
       if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
-      if(plot_slices) HTh[M[0]]->Fill(atan2(yl,xl));
+      if(plot_slices) HPh[M[0]]->Fill(atan2(yl,xl));
     }
     
     if ((tF == 1) && (tB == 1) && plot_offsets)
     {
       Hoff[M[0]][Fiv[0]][Fiv[1]]->Fill(etaF[M[0]][Fiv[0]][Fiv[1]] - etaB[M[0]][Biv[0]][Biv[1]]);
     }
+    
+    if (plot_generator)
+		{
+			Double_t tR = d_lyso/cos(gunTh[M[0]]);			//tZ = d_lyso
+			Double_t tX = tR*sin(gunTh[M[0]])*cos(gunPh[M[0]]);
+			Double_t tY = tR*sin(gunTh[M[0]])*sin(gunPh[M[0]]);
+			HmapGXY[M[0]]->Fill(tX,tY);
+      HmapGRP[M[0]]->Fill(atan2(tY,tX),sqrt(tX*tX + tY*tY));
+		}
 		EC[M[0]]++;
   }
   return 0;
@@ -163,11 +185,12 @@ void init_vars()
 {
   for(int i=0; i<nth; i++)
   {
-    if(plot_map) Hmap[i] = new TH2F("Hmap", "X-Y Map;X;Y",500,-21,21,500,-21,21);
-    if(plot_map) Hmap_2[i] = new TH2F("Hmap_2", "R-#theta Map;#theta;R",500,-4,4,500,0,21);
+    if(plot_map) HmapXY[i] = new TH2F("HmapXY", "X-Y Map;X;Y",500,-21,21,500,-21,21);
+    if(plot_map) HmapRP[i] = new TH2F("HmapRP", "R-#phi Map;#phi;R",500,-4,4,500,0,21);
+    if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
+    if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
     if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
-    // if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",300,0,21);
-    if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",800,-4,4);
+    if(plot_slices) HPh[i] = new TH1F("HTh", "#phi Distribution;#phi;Counts",800,-4,4);
   }
   for(int i=0; i<CN; i++)
   {
@@ -307,31 +330,45 @@ void Simulation_runner()
   }
   if(plot_map)
   {
-    TH2F* Hmapm = merge(Hmap);
+    TH2F* HmapXYm = merge(HmapXY);
     TCanvas* cMap = new TCanvas("cMap", "X-Y Distribution", 1000, 1000);
-    Hmapm->Draw("COLZ");
+		HmapXYm->Draw("COLZ");
     cMap->SaveAs("XYmap.pdf","pdf");
-    Hmapm->SaveAs("Hmap.root","root");
+		HmapXYm->SaveAs("HmapXY.root","root");
     
-    TH2F* Hmapm_2 = merge(Hmap_2);
-    TCanvas* cMap_2 = new TCanvas("cMap_2", "R-#theta Distribution", 1000, 1000);
-    Hmapm_2->Draw("COLZ");
-    cMap_2->SaveAs("RThmap.pdf","pdf");
-    Hmapm_2->SaveAs("Hmap_2.root","root");
+    TH2F* HmapRPm = merge(HmapRP);
+    TCanvas* cMap_2 = new TCanvas("cMap_2", "R-#phi Distribution", 1000, 1000);
+		HmapRPm->Draw("COLZ");
+    cMap_2->SaveAs("RPmap.pdf","pdf");
+		HmapRPm->SaveAs("HmapRP.root","root");
     
 		
     if(plot_slices)
 		{
-			TH1F* HRam = merge(HRa),* HThm = merge(HTh);
-			TCanvas* cSliceTh = new TCanvas("cSliceTh", "Theta Distribution", 1000, 1000);
-			HThm->Draw();
+			TH1F* HRam = merge(HRa),* HPhm = merge(HPh);
+			TCanvas* cSliceTh = new TCanvas("cSliceTh", "Phi Distribution", 1000, 1000);
+			HPhm->Draw();
 			cSliceTh->SaveAs("Slices.pdf(","pdf");
-			HThm->SaveAs("HTh.root","root");
+			HPhm->SaveAs("HPh.root","root");
 			TCanvas* cSliceR = new TCanvas("cSliceR", "R Distribution", 1000, 1000);
 			HRam->Draw();
 			cSliceR->SaveAs("Slices.pdf)","pdf");
 			HRam->SaveAs("HRa.root","root");
 		}
+	}
+	if(plot_generator)
+	{
+		TH2F* HmapGXYm = merge(HmapGXY);
+    TCanvas* cMap_3 = new TCanvas("cMap_3", "Generator X-Y Distribution", 1000, 1000);
+		HmapGXYm->Draw("COLZ");
+    cMap_3->SaveAs("GenXYmap.pdf","pdf");
+		HmapGXYm->SaveAs("HmapGXY.root","root");
+
+		TH2F* HmapGRPm = merge(HmapGRP);
+    TCanvas* cMap_4 = new TCanvas("cMap_4", "Generator R-#phi Distribution", 1000, 1000);
+		HmapGRPm->Draw("COLZ");
+    cMap_4->SaveAs("GenRPmap.pdf","pdf");
+		HmapGRPm->SaveAs("HmapGRP.root","root");
 	}
 	if(plot_offsets)
   {
