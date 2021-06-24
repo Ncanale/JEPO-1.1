@@ -9,16 +9,16 @@
 
 
 //comment this section if ROOT is installed from source
-// #include <root/TCanvas.h>
-// #include <root/TChain.h>
-// #include <root/TH1.h>
-// #include <root/TLeaf.h>
-// #include <root/TH2.h>
-// #include <root/TThread.h>
-// #include <root/TROOT.h>
-// #include <root/TRandom3.h>
-// #include <root/TFile.h>
-// #include <root/TError.h>
+#include <root/TCanvas.h>
+#include <root/TChain.h>
+#include <root/TH1.h>
+#include <root/TLeaf.h>
+#include <root/TH2.h>
+#include <root/TThread.h>
+#include <root/TROOT.h>
+#include <root/TRandom3.h>
+#include <root/TFile.h>
+#include <root/TError.h>
 
 
 #define PERPENDICULAR 0
@@ -27,6 +27,7 @@
 using namespace std;
 using namespace ROOT;
 
+Double_t NaN = std::numeric_limits<double>::quiet_NaN();
 int n_runs = 5;
 int n_steps = 7;
 Long64_t N;
@@ -43,7 +44,7 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; //total number of layer modules 
-const int nth = 6; // number of thread
+const int nth = 8; // number of thread
 const int Tn = CN/2; //number of front facing modules 
 const Double_t Tb = 6; //tracker module base in cm
 const Double_t Tt = 2; //tracker module thickness in cm
@@ -92,80 +93,48 @@ void* SR_func (void* ptr)
     {
       F[M[0]][j] = t[M[0]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
       B[M[0]][j] = t[M[0]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
-      
-      //cout<<M[0]<<": "<<F[M[0]][j]<<", "<<B[M[0]][j]<<", "<<(F[M[0]][j] && B[M[0]][j])<<endl;
-      
       if(plot_signals)
       {
         Hf[M[0]][j]->Fill(F[M[0]][j]);
         Hb[M[0]][j]->Fill(B[M[0]][j]);
       }
-      
-      //F[M[0]][j] = (isnan(F[M[0]][j]) ? 0 : F[M[0]][j]);
-      //B[M[0]][j] = (isnan(B[M[0]][j]) ? 0 : B[M[0]][j]);
     }
     
-    Double_t xB=std::numeric_limits<double>::quiet_NaN(), yF=std::numeric_limits<double>::quiet_NaN();
-    Double_t zB=std::numeric_limits<double>::quiet_NaN(), zF=std::numeric_limits<double>::quiet_NaN();
-    Double_t hm=std::numeric_limits<double>::quiet_NaN(); 
-    //, hmF =std::numeric_limits<double>::quiet_NaN();
+    Double_t xB=NaN, yF=NaN, zB=NaN, zF=NaN,hm=NaN; 
     int tF=0, tB=0, ep=0;
     array<int,2> Fiv, Biv;      //index values
     for(int q=0; q<CN/2; q++)
     {
       for(int r=CN/2; r<CN; r++)
       {
-        //cout<<M[0]<<": CN/2 = "<<CN/2<<endl;
         if((F[M[0]][q] && F[M[0]][r]) && (!isnan(F[M[0]][q]) && !isnan(F[M[0]][r])))
         {
           etaF[M[0]][q][r] = (F[M[0]][q] - F[M[0]][r]) / (F[M[0]][q] + F[M[0]][r]);
-          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; etaF = "<<etaF[M[0]][q][r]<<endl;
           HetaF[M[0]][q][r]->Fill(etaF[M[0]][q][r]);
           if(plot_ratios) HratioF[M[0]][q][r]->Fill(F[M[0]][q],F[M[0]][r]);
-          ////yF = 6*(3-q) + 3*(1-etaF[M[0]][q][r])*(7.5+q-r) - 1.5;
-					// int ep = r - q - 7;
-					// double d = dF + pow(-1,ep) + 1;
-					// zF = 1 + pow(-1,ep+1)*etaF[M[0]][q][r];
-          // yF = zF * (1.5*zF + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zF*pow(-1,ep+1));
 					ep = r - q - Tn;
 					zF = (1 + pow(-1,ep+1)*etaF[M[0]][q][r])*(Tt/2);
-          hm = Tb*((Tn/2.)-q-1+pow(-1,ep)/4);
-          yF = zF * (hm + (zF*(Tb/(2*Tt)))) / (dF + (Tt/2)*(1+etaF[M[0]][q][r]));
+          yF = zF * 1.5 * (11 - 4*q + (1 - etaF[M[0]][q][r])*pow(-1,ep)) / (dF + 1 + etaF[M[0]][q][r]);
           Fiv = {q,r};
           tF = 1;
         }
         else if((count_if(F[M[0]].begin(),F[M[0]].end(),is_nan)==(CN-1)) && (!isnan(F[M[0]][q]) || !isnan(F[M[0]][r])))
         {
-          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on F"<<endl;
-          //if(!isnan(F[M[0]][q])) yF = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5; 
-          //if(!isnan(F[M[0]][r])) yF = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
           tF = 2;
         }
         if((B[M[0]][q] && B[M[0]][r]) && (!isnan(B[M[0]][q]) && !isnan(B[M[0]][r])))
         {
-          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; NO etaB yet!"<<endl;
           etaB[M[0]][q][r] = (B[M[0]][q] - B[M[0]][r]) / (B[M[0]][q] + B[M[0]][r]);
-          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; etaB = "<<etaB[M[0]][q][r]<<endl;
           HetaB[M[0]][q][r]->Fill(etaB[M[0]][q][r]);
-          //if(plot_ratios && F[M[0]][0]>5 && F[M[0]][0]<10 && F[M[0]][2]>8 && F[M[0]][2]<13) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
           if(plot_ratios) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
-          // // xB = 6*(3-q) + 3*(1-etaB[M[0]][q][r])*(7.5+q-r) - 1.5;
-					// int ep = r - q - 7;
-					// double d = dB + pow(-1,ep) + 1;
-					// zB = 1 + pow(-1,ep+1)*etaB[M[0]][q][r];
-          // xB = zB * (1.5*zB + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zB*pow(-1,ep+1));
 					ep = r - q - Tn;
           zB = (1 + pow(-1,ep+1)*etaB[M[0]][q][r])*Tt/2;
-          hm = Tb*((Tn/2.)-q-1+pow(-1,ep)/4); 
-          xB = zB * (hm + (zB*(Tb/(2*Tt)))) / (dB + (Tt/2)*(1+etaB[M[0]][q][r]));
+          xB = zB * 1.5 * (11 - 4*q + (1 - etaB[M[0]][q][r])*pow(-1,ep)) / (dB + 1 + etaB[M[0]][q][r]);
           Biv = {q,r};
           tB = 1;
         }
         else if((count_if(B[M[0]].begin(),B[M[0]].end(),is_nan)==(CN-1)) && (!isnan(B[M[0]][q]) || !isnan(B[M[0]][r])))
         {
-          //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; Edge on B"<<endl;
-          //if(!isnan(B[M[0]][q])) xB = 6*(3-q) + ((tr.Rndm()*2)-1)*fw - 1.5;
-          //if(!isnan(B[M[0]][r])) xB = 6*(10.5-r) + ((tr.Rndm()*2)-1)*fw - 1.5;
           tB = 2;
         }
       }
@@ -175,27 +144,17 @@ void* SR_func (void* ptr)
     {
       Double_t xl = (d_lyso/zB)*xB;
       Double_t yl = (d_lyso/zF)*yF;
-      // cout << "Xl " << xl <<", Yl "<< yl << endl;
-      //Double_t xl = (d_lyso/dB)*xB;
-      //Double_t yl = (d_lyso/dF)*yF;
-      //Double_t xl = xB;			//Use this section for testing with cylindrical beam
-      //Double_t yl = yF;			//
       if(plot_map) Hmap[M[0]]->Fill(xl,yl);
       if(plot_map) Hmap_2[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
       if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
       if(plot_slices) HTh[M[0]]->Fill(atan2(yl,xl));
     }
     
-		//if (tB == 1) cout<<tF<<", "<<tB<<endl;
     if ((tF == 1) && (tB == 1) && plot_offsets)
     {
-			//cout<<Fiv[0]<<", "<<Fiv[1]<<", "<<Biv[0]<<", "<<Biv[1]<<endl;
       Hoff[M[0]][Fiv[0]][Fiv[1]]->Fill(etaF[M[0]][Fiv[0]][Fiv[1]] - etaB[M[0]][Biv[0]][Biv[1]]);
     }
-    
-    //cout<<M[0]<<": CN/2 = "<<CN/2<<endl;
-    //if(i%10000==0) cout<<F[M[0]][0]<<", "<<B[M[0]][0]<<", "<<(F[M[0]][0] && B[M[0]][0])<<endl;
-    EC[M[0]]++;
+		EC[M[0]]++;
   }
   return 0;
 }
@@ -305,7 +264,6 @@ void Simulation_runner()
     for(int j=0; j<nth; j++)
     {
       ss.str("");
-      //ss<<path_name<<Particle<<Target<<"-"<<Energy<<"MeV_t"<<j<<"-"<<run_id<<"-"<<i<<".root";
       ss<<path_name<<Particle<<Target<<"-"<<Energy<<"MeV_t"<<j<<"-"<<i<<".root";
       cout<<"Filename: "<<ss.str()<<endl;
       for(int k=0; k<nth; k++) t[k]->Add(ss.str().data());
@@ -313,8 +271,6 @@ void Simulation_runner()
   }
   N = t[0]->GetEntries();
   cout<<"Number of events in the tree: "<<N<<endl;
-  
-  //TH1F h("h","h",100,0,100);
   
   init_vars();
 
@@ -398,7 +354,6 @@ void Simulation_runner()
       cEta->SaveAs((string("Eta_Positions.pdf") + string(i==0 ? "(" : "") + string(i==(ECs.size()-1) ? ")" : "")).data(),"pdf");
 		}
     f.Close();
-    //cEta->SaveAs("Eta_Positions.pdf","pdf");
   }
 }
 

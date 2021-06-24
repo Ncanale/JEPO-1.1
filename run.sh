@@ -26,6 +26,7 @@ sed -i "s/G4double Smear = .*/G4double Smear = $Smearing;/" ../src/BT2017EveAct.
 
 /usr/bin/ninja-build
 
+sed -i "s/^NTHREADS.*/NTHREADS		    $n_cores/" config.cfg
 sed -i "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
 sed -i "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" config.cfg
 sed -i "s/^TRACKERCONFIG.*/TRACKERCONFIG	$configuration/" config.cfg
