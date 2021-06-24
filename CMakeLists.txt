@@ -25,7 +25,7 @@ endif()
 #------------------------------------------------------------------------------#
 #   Find ROOT package.                                                         #
 #------------------------------------------------------------------------------#
-find_package(ROOT REQUIRED)
+#find_package(ROOT REQUIRED)
 
 #------------------------------------------------------------------------------#
 #   Setup Geant4 include directories and compile definitions                   #
@@ -34,7 +34,7 @@ find_package(ROOT REQUIRED)
 #------------------------------------------------------------------------------#
 include(${Geant4_USE_FILE})
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include(${ROOT_USE_FILE})
+#include(${ROOT_USE_FILE})
 
 #------------------------------------------------------------------------------#
 #   Locate sources and headers for this project                                #
@@ -61,7 +61,7 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 #------------------------------------------------------------------------------#
 add_executable(jepo jepo.cc ${sources} ${headers})# ${analysers})
 
-target_link_libraries(jepo ${Geant4_LIBRARIES} ${ROOT_LIBRARIES})# Analysis)
+target_link_libraries(jepo ${Geant4_LIBRARIES})# ${ROOT_LIBRARIES})# Analysis)
 
 #------------------------------------------------------------------------------#
 #   Copy all scripts to the build directory, i.e. the directory in which we    #
