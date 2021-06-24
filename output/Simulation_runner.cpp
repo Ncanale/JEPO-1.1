@@ -9,16 +9,16 @@
 
 
 //comment this section if ROOT is installed from source
-#include <root/TCanvas.h>
-#include <root/TChain.h>
-#include <root/TH1.h>
-#include <root/TLeaf.h>
-#include <root/TH2.h>
-#include <root/TThread.h>
-#include <root/TROOT.h>
-#include <root/TRandom3.h>
-#include <root/TFile.h>
-#include <root/TError.h>
+// #include <root/TCanvas.h>
+// #include <root/TChain.h>
+// #include <root/TH1.h>
+// #include <root/TLeaf.h>
+// #include <root/TH2.h>
+// #include <root/TThread.h>
+// #include <root/TROOT.h>
+// #include <root/TRandom3.h>
+// #include <root/TFile.h>
+// #include <root/TError.h>
 
 
 #define PERPENDICULAR 0
@@ -27,7 +27,7 @@
 using namespace std;
 using namespace ROOT;
 
-int n_runs = 4;
+int n_runs = 5;
 int n_steps = 7;
 Long64_t N;
 string path_name = "";
@@ -42,8 +42,11 @@ int Energy = 270;
 int Dtheta = 8;
 int Ds = 5;
 
-const int CN = 14;
-const int nth = 6;
+const int CN = 14; //total number of layer modules 
+const int nth = 6; // number of thread
+const int Tn = CN/2; //number of front facing modules 
+const Double_t Tb = 6; //tracker module base in cm
+const Double_t Tt = 2; //tracker module thickness in cm
 
 valarray<Long64_t> EC(Long64_t(0),nth);
 array<TH2F*,nth> Hmap,Hmap_2;
@@ -104,7 +107,9 @@ void* SR_func (void* ptr)
     
     Double_t xB=std::numeric_limits<double>::quiet_NaN(), yF=std::numeric_limits<double>::quiet_NaN();
     Double_t zB=std::numeric_limits<double>::quiet_NaN(), zF=std::numeric_limits<double>::quiet_NaN();
-    int tF=0, tB=0;
+    Double_t hm=std::numeric_limits<double>::quiet_NaN(); 
+    //, hmF =std::numeric_limits<double>::quiet_NaN();
+    int tF=0, tB=0, ep=0;
     array<int,2> Fiv, Biv;      //index values
     for(int q=0; q<CN/2; q++)
     {
@@ -117,11 +122,15 @@ void* SR_func (void* ptr)
           //cout<<M[0]<<": q = "<<q<<"; r = "<<r<<"; etaF = "<<etaF[M[0]][q][r]<<endl;
           HetaF[M[0]][q][r]->Fill(etaF[M[0]][q][r]);
           if(plot_ratios) HratioF[M[0]][q][r]->Fill(F[M[0]][q],F[M[0]][r]);
-					int ep = r - q - 7;
-					double d = dF + pow(-1,ep) + 1;
-					zF = 1 + pow(-1,ep+1)*etaF[M[0]][q][r];
-          //yF = 6*(3-q) + 3*(1-etaF[M[0]][q][r])*(7.5+q-r) - 1.5;
-          yF = zF * (1.5*zF + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zF*pow(-1,ep+1));
+          ////yF = 6*(3-q) + 3*(1-etaF[M[0]][q][r])*(7.5+q-r) - 1.5;
+					// int ep = r - q - 7;
+					// double d = dF + pow(-1,ep) + 1;
+					// zF = 1 + pow(-1,ep+1)*etaF[M[0]][q][r];
+          // yF = zF * (1.5*zF + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zF*pow(-1,ep+1));
+					ep = r - q - Tn;
+					zF = (1 + pow(-1,ep+1)*etaF[M[0]][q][r])*(Tt/2);
+          hm = Tb*((Tn/2.)-q-1+pow(-1,ep)/4);
+          yF = zF * (hm + (zF*(Tb/(2*Tt)))) / (dF + (Tt/2)*(1+etaF[M[0]][q][r]));
           Fiv = {q,r};
           tF = 1;
         }
@@ -140,11 +149,15 @@ void* SR_func (void* ptr)
           HetaB[M[0]][q][r]->Fill(etaB[M[0]][q][r]);
           //if(plot_ratios && F[M[0]][0]>5 && F[M[0]][0]<10 && F[M[0]][2]>8 && F[M[0]][2]<13) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
           if(plot_ratios) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
-					int ep = r - q - 7;
-					double d = dB + pow(-1,ep) + 1;
-					zB = 1 + pow(-1,ep+1)*etaB[M[0]][q][r];
-          //xB = 6*(3-q) + 3*(1-etaB[M[0]][q][r])*(7.5+q-r) - 1.5;
-          xB = zB * (1.5*zB + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zB*pow(-1,ep+1));
+          // // xB = 6*(3-q) + 3*(1-etaB[M[0]][q][r])*(7.5+q-r) - 1.5;
+					// int ep = r - q - 7;
+					// double d = dB + pow(-1,ep) + 1;
+					// zB = 1 + pow(-1,ep+1)*etaB[M[0]][q][r];
+          // xB = zB * (1.5*zB + 6*(3-q) + 1.5*pow(-1,ep) - 3) / (d + zB*pow(-1,ep+1));
+					ep = r - q - Tn;
+          zB = (1 + pow(-1,ep+1)*etaB[M[0]][q][r])*Tt/2;
+          hm = Tb*((Tn/2.)-q-1+pow(-1,ep)/4); 
+          xB = zB * (hm + (zB*(Tb/(2*Tt)))) / (dB + (Tt/2)*(1+etaB[M[0]][q][r]));
           Biv = {q,r};
           tB = 1;
         }
@@ -162,6 +175,7 @@ void* SR_func (void* ptr)
     {
       Double_t xl = (d_lyso/zB)*xB;
       Double_t yl = (d_lyso/zF)*yF;
+      // cout << "Xl " << xl <<", Yl "<< yl << endl;
       //Double_t xl = (d_lyso/dB)*xB;
       //Double_t yl = (d_lyso/dF)*yF;
       //Double_t xl = xB;			//Use this section for testing with cylindrical beam
