@@ -21,7 +21,7 @@ else:
 
 rebin_value = 1 
 n_runs      = 5
-spect_sigma = 2.25
+spect_sigma = 100
 
 spect_th    = 0.05
 
@@ -140,4 +140,5 @@ for i in range (0,len(names)):
     f_s.write(string)
 f_s.close()
 
-#input('press a key')
+# input('press a key')
+

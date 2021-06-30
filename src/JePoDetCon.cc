@@ -89,8 +89,8 @@ void JePoDetCon::DefineDimensions()
 	trCon = m_CM -> GetTrackerConfig(); // Setup
  	trB = 60.0 * mm; // single prism dimensions
  	trH = 20.0 * mm;
-  //trL = 300.0 * mm;
-  trL = 7 * trB;
+  	//trL = 300.0 * mm;
+ 	trL = 7 * trB;
  	AlT =  0.01 * mm;
 	//holX = 90.0 * mm;
 	//holY = 90.0 * mm;
@@ -673,7 +673,8 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
   bb = ((trID / 7) % 2) * (trID / 14);
 
   // Define position of tracker
-  G4double posX, posY, posZ;
+  G4double posX, posY, posZ, f_off;
+  f_off = 10;
   if(trCon)     //  For perpendicular configuration
   {
     posX = translate * (ff + fb - bf - bb) + (-15 + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
@@ -682,7 +683,7 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
   else          //  For parallel configuration
   {
     posX = 0;
-    posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (bf + bb)*translate + (ff + fb)*20;
+    posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (bf + bb)*translate + (ff + fb)*f_off;
   }
   posZ = detZ - (0.5 + ff + fb)*(iH + trH + AlT + 0.01) - 30.0;
   posH = G4ThreeVector(0, 0, detZ - (iH + trH + AlT + 0.01) - 30.0);
