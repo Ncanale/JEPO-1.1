@@ -1,8 +1,8 @@
 #!/bin/zsh
 
 n_cores=6
-n_events=500000
-n_runs=5
+n_events=100000
+n_runs=7
 
 #beam properties
 particle=deuteron
@@ -14,9 +14,9 @@ file_name="${particle}${target}-${energy}MeV"
 #detector properties
 configuration=PARALLEL    #in all caps
 # configuration=PERPENDICULAR    #in all caps
-Smearing=0.26
+Smearing=0.20
 
-rm -r output/${particle}*-*
+rm -r output/${particle}*-* *.bak
 
 #echo -e "\e[31mNumber of events: $n_events \e[39m..."
 sed -i .bak "s+/run/beamOn.*+/run/beamOn $n_events+" n_event.mac
@@ -65,7 +65,8 @@ do
   done
 
   mv output/$file_name.root output/$file_name-$i.root
-  echo -e "\e[31mRun $(($i + 1)) done \e[39m..."
+  # echo -e "\e[31mRun $(($i + 1)) done \e[39m..."
+  echo -e "** ** ** ** ** Run $(($i + 1)) done ... ** ** ** ** ** "
 done
 
 #sed -i .bak "s/TRANSLATE.*/TRANSLATE              	0/" config.cfg
@@ -79,4 +80,10 @@ Smearing: $Smearing
 Configuration: $configuration" > "details_$(date).txt"
 root -q -l Simulation_runner.cpp
 python3 Peak_fitter.py
+
+if [[ "$configuration" == "PARALLEL" ]]
+then
+    python3 Offset_plotter.py 
+fi
+ 
 cd ..

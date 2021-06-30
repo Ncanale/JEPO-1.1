@@ -47,13 +47,13 @@ for i in range(0,h2_bins):
     # if ( i > 170):
     #     print ('value at i = 90', num/h2_entries)
 
-h1_buffer.Draw('C')
+h1_buffer.Draw('L')
 h1_buffer.SetLineColor(rt.kRed)
 h2_buffer.Draw("same")
 
 c2 = rt.TCanvas("c2", "Overlaps")
 c2.cd()
-h1_buffer.Draw('C')
+h1_buffer.Draw('')
 h1_buffer.SetLineColor(rt.kRed)
 h2_buffer.Draw("same")
 

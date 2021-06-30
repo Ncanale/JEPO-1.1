@@ -4,13 +4,20 @@ import math as m
 import time
 
 
-configuration = "PERPENDICULAR"
+configuration = "PARALLEL"
 
 if configuration == "PARALLEL":
     names = ['Hoff_3_11']
+    path_names = ['Offsets.root']
+    
+    ## REAL
+    # names = ['h_eta_offset']
+    # path_names = ['TB_offset.root']
+    
     canvas_names = ['can']
     canvas_titles =['Offset']
-    path_names = ['Offsets.root']
+    
+    
 elif configuration == "PERPENDICULAR":
     names = ['HRa']
     canvas_names = ['can_r']
@@ -20,10 +27,10 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 5
-spect_sigma = 100
+n_runs      = 7
+spect_sigma = 1.5
 
-spect_th    = 0.05
+spect_th    = 0.1
 
 Target= "Empty"
 Smearing=0.26
@@ -112,11 +119,19 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
     # # Calibration # #
     sigma= []
     sigma_err = root_sum_square(sigma_fit_error,1) #No calibration needed -> Calib param = 1 
-
+    if configuration == "PARALLEL":
+        Dx  = (peak_fit[-2] - peak_fit[1])
+        print('peak -2 ', peak_fit[-2] ,' peak 1 ', peak_fit[1],'; diff',Dx )
+        calib_parameter = 2.0/Dx
+    if configuration == "PERPENDICULAR":
+         calib_parameter = 1
+         
     # print('calib param',calib_parameter)
+    # for k in range(1,nfound-1): #calibrating the resolution 
     for k in range(nfound): #calibrating the resolution 
         # print('sigma %.3f mm' % (sigma_fit[k]*calib_parameter))
-        sigma.append(sigma_fit[k])
+        # sigma.append(sigma_fit[k])
+        sigma.append(sigma_fit[k]*calib_parameter)
     print ('\naverage sigma value %.3f cm'% (np.mean(sigma)),', st dev sigma %.3f cm'% (np.std(sigma)) ,'root_sum_square %.3f cm'%(sigma_err),', ',sigma,' \n')
     print (' positions ', peak_fit)
     
