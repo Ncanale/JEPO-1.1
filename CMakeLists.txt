@@ -89,6 +89,7 @@ endforeach()
 set(OUTPUT_SCRIPTS
 	Simulation_runner.cpp
 	Peak_fitter.py
+	Offset_plotter.py
 )
 
 foreach(_script ${OUTPUT_SCRIPTS})

@@ -9,7 +9,7 @@
 
 
 //comment this section if ROOT is installed from source
-
+/*
 #include <root/TCanvas.h>
 #include <root/TChain.h>
 #include <root/TH1.h>
@@ -21,7 +21,7 @@
 #include <root/TFile.h>
 #include <root/TError.h>
 #include <root/TLatex.h>
-
+*/
 
 #define PERPENDICULAR 0
 #define PARALLEL 1
@@ -46,7 +46,7 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; //total number of layer modules
-const int nth = 8; // number of thread
+const int nth = 6; // number of thread
 const int Tn = CN/2; //number of front facing modules
 const Double_t Tb = 6; //tracker module base in cm
 const Double_t Tt = 2; //tracker module thickness in cm

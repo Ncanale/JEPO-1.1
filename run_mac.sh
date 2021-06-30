@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 n_cores=6
-n_events=100000
+n_events=500000
 n_runs=5
 
 #beam properties
@@ -12,8 +12,8 @@ energy=270
 file_name="${particle}${target}-${energy}MeV"
 
 #detector properties
-#configuration=PARALLEL    #in all caps
-configuration=PERPENDICULAR    #in all caps
+configuration=PARALLEL    #in all caps
+# configuration=PERPENDICULAR    #in all caps
 Smearing=0.26
 
 rm -r output/${particle}*-*
@@ -54,9 +54,9 @@ make -j6
 
 for (( i=0; i<$n_runs; i++ ))
 do
-  #sed -i .bak "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
-  sed -i .bak "s/MINTHETA.*/MINTHETA                $((1 + (3 * $i))).0/" config.cfg
-  sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((1 + (3 * $i))).0/" config.cfg
+  sed -i .bak "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
+  # sed -i .bak "s/MINTHETA.*/MINTHETA                $((1 + (3 * $i))).0/" config.cfg
+  # sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((1 + (3 * $i))).0/" config.cfg
   ./jepo -m n_event.mac
 
   for (( j=0; j<$n_cores; j++ ))
