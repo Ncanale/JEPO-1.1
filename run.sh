@@ -1,8 +1,8 @@
 #!/bin/bash
 
 n_cores=8
-n_events=100000
-n_runs=4
+n_events=200000
+n_runs=7
 
 #beam properties
 particle=deuteron
@@ -12,9 +12,9 @@ energy=270
 file_name="${particle}${target}-${energy}MeV"
 
 #detector properties
-#configuration=PARALLEL    #in all caps
-configuration=PERPENDICULAR    #in all caps
-Smearing=0.26
+configuration=PARALLEL    #in all caps
+#configuration=PERPENDICULAR    #in all caps
+Smearing=0.227
 
 rm -r output/${particle}*-*
 
@@ -38,7 +38,7 @@ then
     sed -i "s/TARGETMATERIAL.*/TARGETMATERIAL		$target/" config.cfg
 fi
 
-sed -i "s/^int n_runs.*/int n_runs = $n_runs;/" output/Simulation_runner.cpp
+sed -i "s/^const int n_runs.*/const int n_runs = $n_runs;/" output/Simulation_runner.cpp
 sed -i "s/^const int nth.*/const int nth = $n_cores;/" output/Simulation_runner.cpp
 sed -i "s/^int Energy.*/int Energy = $energy;/" output/Simulation_runner.cpp
 sed -i "s/^bool configuration.*/bool configuration = $configuration;/" output/Simulation_runner.cpp
@@ -53,9 +53,9 @@ sed -i "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitt
 
 for (( i=0; i<$n_runs; i++ ))
 do
-  #sed -i "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
-  sed -i "s/MINTHETA.*/MINTHETA                $((6 + (3 * $i))).0/" config.cfg
-  sed -i "s/MAXTHETA.*/MAXTHETA                $((6 + (3 * $i))).0/" config.cfg
+  sed -i "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
+  #sed -i "s/MINTHETA.*/MINTHETA                $((6 + (3 * $i))).0/" config.cfg
+  #sed -i "s/MAXTHETA.*/MAXTHETA                $((6 + (3 * $i))).0/" config.cfg
   ./jepo -m n_event.mac
 
   for (( j=0; j<$n_cores; j++ ))

@@ -6,10 +6,12 @@
 #include <thread>
 #include <algorithm>
 #include <valarray>
+#include <list>
+#include <tuple>
 
 
 //comment this section if ROOT is installed from source
-/*
+
 #include <root/TCanvas.h>
 #include <root/TChain.h>
 #include <root/TH1.h>
@@ -21,7 +23,7 @@
 #include <root/TFile.h>
 #include <root/TError.h>
 #include <root/TLatex.h>
-*/
+
 
 #define PERPENDICULAR 0
 #define PARALLEL 1
@@ -30,7 +32,6 @@ using namespace std;
 using namespace ROOT;
 
 Double_t NaN = std::numeric_limits<double>::quiet_NaN();
-int n_runs = 5;
 int n_steps = 7;
 Long64_t N;
 string path_name = "";
@@ -45,18 +46,22 @@ int Energy = 270;
 int Dtheta = 8;
 int Ds = 5;
 
-const int CN = 14; //total number of layer modules
-const int nth = 6; // number of thread
-const int Tn = CN/2; //number of front facing modules
-const Double_t Tb = 6; //tracker module base in cm
-const Double_t Tt = 2; //tracker module thickness in cm
+const int CN = 14; 										// total number of layer modules
+const int n_runs = 7;									// number of runs -> radii, translations, etc
+const int nth = 8; 										// number of threads (also to expect from file names)
+const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
+const int Tn = CN/2; 									// number of front facing modules
+const Double_t Tb = 6; 								// tracker module base in cm
+const Double_t Tt = 2; 								// tracker module thickness in cm
 
 
 valarray<Long64_t> EC(Long64_t(0),nth);
+array<Long64_t,n_runs> NR;
 array<TH2F*,nth> HmapXY,HmapRP,HmapGXY,HmapGRP;
 array<TH1F*,nth> HRa, HPh;
 array<array<TH1F*,CN>,nth> Hf, Hb;
 array<array<array<TH1F*,CN>,CN>,nth> HetaF, HetaB, Hoff;
+array<array<array<array<TH1F*,CN>,CN>,n_runs>,nth> HoffR;
 array<array<array<TH2F*,CN>,CN>,nth> HratioF, HratioB;
 
 array<string,CN> nameF, nameB;
@@ -66,6 +71,7 @@ array<array<Double_t,CN>,nth> F, B;
 array<array<array<Double_t,CN>,CN>,nth> etaF, etaB;
 
 array<TChain*,nth> t;
+array<array<TChain*,n_runs>,nth> tR;
 
 TRandom3 tr;
 
@@ -75,12 +81,12 @@ Double_t dF = d_lyso - 7.0;		//distance of source from start of front layer
 Double_t dB = d_lyso - 5.0;		//distance of source from start of back layer
 
 // configuration can be set to perpendicular or parallel
-bool configuration = PERPENDICULAR;
+bool configuration = PARALLEL;
 
 bool plot_slices = !configuration && true;
 bool plot_map = !configuration && true;
 bool plot_signals = false;
-bool plot_ratios = false;
+bool plot_ratios = true;
 bool plot_offsets = configuration && true;
 bool plot_generator = true;
 
@@ -92,20 +98,20 @@ void* SR_func(void* ptr)
 	cout<<"Running Thread: "<<M[0]<<endl;
 	for(auto i=M[1]; i<M[2]; i++)
 	{
-		t[M[0]]->GetEntry(i);
+		tR[M[0]][M[3]]->GetEntry(i);
 
 		if(plot_generator)
 		{
-			gunX[M[0]] = t[M[0]]->GetLeaf("position_X")->GetTypedValue<float>();
-			gunY[M[0]] = t[M[0]]->GetLeaf("position_Y")->GetTypedValue<float>();
-			gunTh[M[0]] = t[M[0]]->GetLeaf("theta_lab")->GetTypedValue<float>();
-			gunPh[M[0]] = t[M[0]]->GetLeaf("phi_lab")->GetTypedValue<float>();
+			gunX[M[0]] = tR[M[0]][M[3]]->GetLeaf("position_X")->GetTypedValue<float>();
+			gunY[M[0]] = tR[M[0]][M[3]]->GetLeaf("position_Y")->GetTypedValue<float>();
+			gunTh[M[0]] = tR[M[0]][M[3]]->GetLeaf("theta_lab")->GetTypedValue<float>();
+			gunPh[M[0]] = tR[M[0]][M[3]]->GetLeaf("phi_lab")->GetTypedValue<float>();
 		}
 
 		for(int j=0; j<CN; j++)
 		{
-			F[M[0]][j] = t[M[0]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
-			B[M[0]][j] = t[M[0]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
+			F[M[0]][j] = tR[M[0]][M[3]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
+			B[M[0]][j] = tR[M[0]][M[3]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
 			if(plot_signals)
 			{
 				Hf[M[0]][j]->Fill(F[M[0]][j]);
@@ -167,6 +173,7 @@ void* SR_func(void* ptr)
 		if((tF == 1) && (tB == 1) && plot_offsets)
 		{
 			Hoff[M[0]][Fiv[0]][Fiv[1]]->Fill(etaF[M[0]][Fiv[0]][Fiv[1]] - etaB[M[0]][Biv[0]][Biv[1]]);
+			HoffR[M[0]][M[3]][Fiv[0]][Fiv[1]]->Fill(etaF[M[0]][Fiv[0]][Fiv[1]] - etaB[M[0]][Biv[0]][Biv[1]]);
 		}
 
 		if(plot_generator)
@@ -207,8 +214,16 @@ void init_vars()
 			{
 				HetaF[j][i][k] = new TH1F((string("HetaF_")+to_string(i)+string("_")+to_string(k)).data(),"F",200,-1.1,1.1);
 				HetaB[j][i][k] = new TH1F((string("HetaB_")+to_string(i)+string("_")+to_string(k)).data(),"B",200,-1.1,1.1);
-				if(plot_offsets) Hoff[j][i][k] = new TH1F((string("Hoff_")+to_string(i)+string("_")+to_string(k)).data(),
+				if(plot_offsets)
+				{
+					Hoff[j][i][k] = new TH1F((string("Hoff_")+to_string(i)+string("_")+to_string(k)).data(),
 					        (string("Offset_")+to_string(i)+string("_")+to_string(k)+string(";Offset Value;Counts")).data(),180,-2.1,2.1);
+					for(int l=0; l<n_runs; l++)
+					{
+						HoffR[j][l][i][k] = new TH1F((string("Hoff_run")+to_string(l)+string("_")+to_string(i)+string("_")+to_string(k)).data(),
+										(string("Offset_")+to_string(i)+string("_")+to_string(k)+string(";Offset Value;Counts")).data(),180,-2.1,2.1);
+					}
+				}
 
 				if(plot_ratios)
 				{
@@ -227,22 +242,31 @@ void init_vars()
 void run_threads()
 {
 	array<TThread*,nth> VT;
-	array<Long64_t[3],nth> par;
-	for(int i=0; i<nth; i++)
+	array<Long64_t[4],nth> par;
+	for(int j=0; j<n_runs; j++)
 	{
-		par[i][0] = i;
-		par[i][1] = i*(N/nth);
-		par[i][2] = (i+1)*(N/nth);
-		VT[i] = new TThread((string("T")+to_string(i)).data(), SR_func, (void*) par[i]);
+		cout<<"For Run "<<j<<":"<<endl;
+		for(int i=0; i<nth; i++)
+		{
+			par[i][0] = i;
+			par[i][1] = i*(NR[j]/nth);
+			par[i][2] = (i+1)*(NR[j]/nth);
+			par[i][3] = j;
+			VT[i] = new TThread((string("T")+to_string(i)).data(), SR_func, (void*) par[i]);
+		}
+		for(int i=0; i<nth; i++)
+		{
+			VT[i]->Run();
+			usleep(10000);
+		}
+		while(1)
+		{
+			cout<<"Progress: "<<(EC.sum() * 100) / N<<"%"<<endl;
+			sleep(5);
+			if((EC.sum() * 100) / N >= ((j+1)*99/n_runs)) break;
+		}
+		for(int i=0; i<nth; i++) VT[i]->Join();
 	}
-	for(int i=0; i<nth; i++) VT[i]->Run();
-	while(1)
-	{
-		cout<<"Progress: "<<(EC.sum() * 100) / N<<"%"<<endl;
-		sleep(5);
-		if((EC.sum() * 100) / N >= 99) break;
-	}
-	for(int i=0; i<nth; i++) VT[i]->Join();
 }
 
 template <typename T> T merge(array<T,nth> A)
@@ -278,10 +302,33 @@ template <typename T> array<array<T,CN>,CN> merge(array<array<array<T,CN>,CN>,nt
 	return HA;
 }
 
+template <typename T> array<array<array<T,CN>,CN>,n_runs> merge(array<array<array<array<T,CN>,CN>,n_runs>,nth> A)
+{
+	array<array<array<T,CN>,CN>,n_runs> HA;
+	for(int i=0; i<CN; i++)
+	{
+		for(int j=0; j<CN; j++)
+		{
+			for(int k=0; k<n_runs; k++)
+			{
+				HA[k][j][i] = (T) A[0][k][j][i]->Clone();
+				for(int l=1; l<nth; l++) HA[k][j][i]->Add(A[l][k][j][i]);
+			}
+		}
+	}
+	return HA;
+}
+
+bool sorting(tuple<int,int,Long64_t> AA, tuple<int,int,Long64_t> BB) { return get<2>(AA) > get<2>(BB); }
+
 void Simulation_runner()
 {
 	gErrorIgnoreLevel = kError;
-	for(int i=0; i<nth; i++) t[i] = new TChain("hits");
+	for(int i=0; i<nth; i++)
+	{
+		t[i] = new TChain("hits");
+		for(int j=0; j<n_runs; j++) tR[i][j] = new TChain("hits");
+	}
 	stringstream ss;
 	for(int i=0; i<n_runs; i++)
 	{
@@ -290,10 +337,15 @@ void Simulation_runner()
 			ss.str("");
 			ss<<path_name<<Particle<<Target<<"-"<<Energy<<"MeV_t"<<j<<"-"<<i<<".root";
 			cout<<"Filename: "<<ss.str()<<endl;
-			for(int k=0; k<nth; k++) t[k]->Add(ss.str().data());
+			for(int k=0; k<nth; k++)
+			{
+				t[k]->Add(ss.str().data());
+				tR[k][i]->Add(ss.str().data());
+			}
 		}
 	}
 	N = t[0]->GetEntries();
+	for(int i=0; i<n_runs; i++) NR[i] = tR[0][i]->GetEntries();
 	cout<<"Number of events in the tree: "<<N<<endl;
 
 	init_vars();
@@ -306,28 +358,54 @@ void Simulation_runner()
 	{
 		array<array<TH2F*,CN>,CN> HratioFm = merge(HratioF), HratioBm = merge(HratioB);
 		TCanvas* cRatios = new TCanvas("cRatios", "Ratios", 1000, 1000);
+		cRatios->Divide(2,1);
 		TFile f("Ratios.root","RECREATE");
 
-		vector<array<int,2>> ECs;
-		for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) if(HratioFm[i][j]->GetEntries()>0) ECs.push_back({i,j});
-		for(unsigned int i=0; i<ECs.size(); i++)
+		list<tuple<int,int,Long64_t>> ECsF, ECsB;
+		for(int i=0; i<CN; i++) for(int j=0; j<CN; j++)
 		{
-			HratioFm[ECs[i][0]][ECs[i][1]]->Write();
-			HratioFm[ECs[i][0]][ECs[i][1]]->Draw("COLZ");
-			cRatios->SaveAs((string("Ratios_Front.pdf") + string(i==0 ? "(" : "") + string(i==(ECs.size()-1) ? ")" : "")).data(),"pdf");
+			ECsF.push_back(make_tuple(i,j,HratioFm[i][j]->GetEntries()));
+			ECsB.push_back(make_tuple(i,j,HratioBm[i][j]->GetEntries()));
+		}
+		ECsF.sort(sorting);
+		ECsB.sort(sorting);
+		auto itF = ECsF.begin(), itB = ECsB.begin();
+		
+		for(unsigned int i=0; i<TOP_N; i++)
+		{
+			int a,b;
+			tie(a,b,ignore) = *itF;
+			HratioFm[a][b]->Write();
+			cRatios->cd(1);
+			HratioFm[a][b]->Draw("COLZ");
+
+			tie(a,b,ignore) = *itB;
+			HratioBm[a][b]->Write();
+			cRatios->cd(2);
+			HratioBm[a][b]->Draw("COLZ");
+			cRatios->SaveAs((string("Ratios.pdf") + string(i==0 && TOP_N!=1 ? "(" : "") + string(i==(TOP_N-1) && TOP_N!=1 ? ")" : "")).data(),"pdf");
+			
+			++itF;
+			++itB;
 		}
 
+		/*
 		ECs.clear();
-		for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) if(HratioBm[i][j]->GetEntries()>0) ECs.push_back({i,j});
-		for(unsigned int i=0; i<ECs.size(); i++)
-		{
-			HratioBm[ECs[i][0]][ECs[i][1]]->Write();
-			HratioBm[ECs[i][0]][ECs[i][1]]->Draw("COLZ");
-			cRatios->SaveAs((string("Ratios_Back.pdf") + string(i==0 ? "(" : "") + string(i==(ECs.size()-1) ? ")" : "")).data(),"pdf");
-		}
+		for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) ECs.push_back(make_tuple(i,j,HratioBm[i][j]->GetEntries()));
+		ECs.sort(sorting);
+		it = ECs.begin();
 
+		for(unsigned int i=0; i<TOP_N; i++)
+		{
+			int a,b;
+			tie(a,b,ignore) = *it;
+			HratioBm[a][b]->Write();
+			HratioBm[a][b]->Draw("COLZ");
+			cRatios->SaveAs((string("Ratios_Back.pdf") + string(i==0 && TOP_N!=1 ? "(" : "") + string(i==(TOP_N-1) && TOP_N!=1 ? ")" : "")).data(),"pdf");
+		}
+		*/
 		f.Close();
-		HratioBm[0][2]->Draw("SURF1");
+		//HratioBm[0][2]->Draw("SURF1");
 	}
 	if(plot_map)
 	{
@@ -373,24 +451,46 @@ void Simulation_runner()
 	}
 	if(plot_offsets)
 	{
-		array<array<TH1F*,CN>,CN> Hoffm = merge(Hoff);
 		TFile f("Offsets.root","RECREATE");
+		TCanvas* cOffR = new TCanvas("cOffR","Offsets for runs",1900,1000);
+		array<array<TH1F*,CN>,CN> Hoffm = merge(Hoff);
+		list<tuple<int,int,Long64_t>> ECs;
+		for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) ECs.push_back(make_tuple(i,j,Hoffm[i][j]->GetEntries()));
+		ECs.sort(sorting);
+		
+		array<array<array<TH1F*,CN>,CN>,n_runs> HoffRm = merge(HoffR);
+		auto it = ECs.begin();
+		for(unsigned int j=0; j<TOP_N; j++)
+		{
+			for(int i=0; i<n_runs; i++)
+			{
+				int a,b;
+				tie(a,b,ignore) = *it;
+				HoffRm[i][a][b]->Draw();
+				HoffRm[i][a][b]->Write();
+				cOffR->SaveAs((string("Offsets_For_Run_") + to_string(i) + string(".pdf") + string(j==0 && TOP_N!=1 ? "(" : "") + string(j==(TOP_N-1) && TOP_N!=1 ? ")" : "")).data(),"pdf");
+			}
+			++it;
+		}
+
 		TCanvas* cEta = new TCanvas("cEta","Eta Positions",1900,1000);
 		cEta->Divide(3,1);
-
-		vector<array<int,2>> ECs;
-		for(int i=0; i<CN; i++) for(int j=0; j<CN; j++) if(Hoffm[i][j]->GetEntries()>0) ECs.push_back({i,j});
-		for(unsigned int i=0; i<ECs.size(); i++)
+		it = ECs.begin();
+		for(unsigned int i=0; i<TOP_N; i++)
 		{
+			int a,b;
+			tie(a,b,ignore) = *it;
 			cEta->cd(1);
-			HetaFm[ECs[i][0]][ECs[i][1]]->Draw();
+			HetaFm[a][b]->Draw();
 			cEta->cd(2);
-			HetaBm[ECs[i][0]][ECs[i][1]]->Draw();
+			HetaBm[a][b]->Draw();
 			cEta->cd(3);
-			Hoffm[ECs[i][0]][ECs[i][1]]->Draw();
-			Hoffm[ECs[i][0]][ECs[i][1]]->Write();
-			cEta->SaveAs((string("Eta_Positions.pdf") + string(i==0 ? "(" : "") + string(i==(ECs.size()-1) ? ")" : "")).data(),"pdf");
+			Hoffm[a][b]->Draw();
+			Hoffm[a][b]->Write();
+			cEta->SaveAs((string("Eta_Positions.pdf") + string(i==0 && TOP_N!=1 ? "(" : "") + string(i==(TOP_N-1) && TOP_N!=1 ? ")" : "")).data(),"pdf");
+			++it;
 		}
+		
 		f.Close();
 	}
 }
