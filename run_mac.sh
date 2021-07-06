@@ -2,7 +2,7 @@
 
 n_cores=6
 n_events=100000
-n_runs=7
+n_runs=1
 
 #beam properties
 particle=deuteron
@@ -14,7 +14,8 @@ file_name="${particle}${target}-${energy}MeV"
 #detector properties
 configuration=PARALLEL    #in all caps
 # configuration=PERPENDICULAR    #in all caps
-Smearing=0.20
+Smearing=0.227
+# Smearing=0.0
 
 rm -r output/${particle}*-* *.bak
 
@@ -49,14 +50,18 @@ then
     sed -i .bak "s/USETARGET.*/USETARGET		    ON/" config.cfg
     sed -i .bak "s/TARGETMATERIAL.*/TARGETMATERIAL		$target/" config.cfg
 fi
-
+make clean
 make -j6
+
+# my_array=(0.1 5 10 15 20 25 29.9)
+my_array=(29.9) 
 
 for (( i=0; i<$n_runs; i++ ))
 do
   sed -i .bak "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
-  # sed -i .bak "s/MINTHETA.*/MINTHETA                $((1 + (3 * $i))).0/" config.cfg
-  # sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((1 + (3 * $i))).0/" config.cfg
+  sed -i .bak "s/TRANSLATE.*/TRANSLATE              	${my_array[$i]}/" config.cfg
+  # sed -i .bak "s/MINTHETA.*/MINTHETA                $((2 + (2 * $i))).0/" config.cfg
+  # sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((2 + (2 * $i))).0/" config.cfg
   ./jepo -m n_event.mac
 
   for (( j=0; j<$n_cores; j++ ))
@@ -81,9 +86,9 @@ Configuration: $configuration" > "details_$(date).txt"
 root -q -l Simulation_runner.cpp
 python3 Peak_fitter.py
 
-if [[ "$configuration" == "PARALLEL" ]]
-then
-    python3 Offset_plotter.py 
-fi
+# if [[ "$configuration" == "PARALLEL" ]]
+# then
+#     python3 Offset_plotter.py 
+# fi
  
 cd ..

@@ -156,8 +156,8 @@ void* SR_func(void* ptr)
 
 		if(tF && tB)
 		{
-			Double_t xl = (d_lyso/zB)*xB;
-			Double_t yl = (d_lyso/zF)*yF;
+			Double_t xl = (dF/zB)*xB; //project at Front layer distance
+			Double_t yl = (dF/zF)*yF;
 			if(plot_map) HmapXY[M[0]]->Fill(xl,yl);
 			if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
 			if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
@@ -171,7 +171,7 @@ void* SR_func(void* ptr)
 
 		if(plot_generator)
 		{
-			Double_t tR = d_lyso/cos(gunTh[M[0]]);			//tZ = d_lyso
+			Double_t tR = dF/cos(gunTh[M[0]]);			//tZ = d_lyso
 			Double_t tX = tR*sin(gunTh[M[0]])*cos(gunPh[M[0]]);
 			Double_t tY = tR*sin(gunTh[M[0]])*sin(gunPh[M[0]]);
 			HmapGXY[M[0]]->Fill(tX,tY);

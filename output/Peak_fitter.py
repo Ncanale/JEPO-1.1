@@ -16,6 +16,8 @@ if configuration == "PARALLEL":
     
     canvas_names = ['can']
     canvas_titles =['Offset']
+    spect_sigma = 1.5
+    spect_th    = 0.5
     
     
 elif configuration == "PERPENDICULAR":
@@ -23,20 +25,21 @@ elif configuration == "PERPENDICULAR":
     canvas_names = ['can_r']
     canvas_titles =['R_distribution']
     path_names = ['HRa.root']
+    spect_sigma = 100
+    spect_th    = 0.1
 else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
 n_runs      = 7
-spect_sigma = 1.5
 
-spect_th    = 0.1
 
 Target= "Empty"
-Smearing=0.26
+Smearing=0.227
 Energy=270
 
 sigmas = []
+sigmas_errors = []
 units  = []
 
 def root_sum_square(vector_error,calibration):
@@ -71,12 +74,16 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
 
     diff_list = [] 
     print(xpeak_py)
-    for x, y in zip(xpeak_py[0::], xpeak_py[1::]): 
-        print ('peaks',x,', ',y, ', Dx ',y-x)
-        diff_list.append(y-x)
-    diff_list.append(diff_list[-1])
-    # # # Printing difference list # #
-    print ("difference list: ", diff_list)
+    if nfound >1:
+        for x, y in zip(xpeak_py[0::], xpeak_py[1::]): 
+            print ('peaks',x,', ',y, ', Dx ',y-x)
+            diff_list.append(y-x)
+        diff_list.append(diff_list[-1])
+        # # # Printing difference list # #
+        print ("difference list: ", diff_list)
+    else:
+        for j in range (nfound):
+            diff_list.append(0)
 
     peak_fit        = []
     peak_fit_error  = []
@@ -87,7 +94,10 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
     # # # print(fit_funcs)
     for j in range(nfound):   
         funct = rt.TF1('funct','gaus') 
-        hist.Fit(funct,'IQ','',xpeak_py[j]-(np.mean(diff_list)/2),xpeak_py[j]+(np.mean(diff_list[j])/2))
+        if nfound > 1:
+            hist.Fit(funct,'IQ','',xpeak_py[j]-(np.mean(diff_list)/2),xpeak_py[j]+(np.mean(diff_list[j])/2))
+        else:
+            hist.Fit(funct,'IQ','',xpeak_py[j] - 0.5, xpeak_py[j] + 0.5)
         # print('##########',j,'range of fit: (',xpeak_py[j]-(diff_list[j]/2),',',xpeak_py[j]+(diff_list[j]/2),') ##########')
         # print (funct.GetParameter(1),funct.GetParameter(2))
         peak_fit.append(funct.GetParameter(1))
@@ -120,11 +130,17 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
     sigma= []
     sigma_err = root_sum_square(sigma_fit_error,1) #No calibration needed -> Calib param = 1 
     if configuration == "PARALLEL":
-        Dx  = (peak_fit[-2] - peak_fit[1])
-        print('peak -2 ', peak_fit[-2] ,' peak 1 ', peak_fit[1],'; diff',Dx )
-        calib_parameter = 2.0/Dx
+        if nfound >1 :
+            Dx  = (peak_fit[-2] - peak_fit[1])
+            print('peak -2 ', peak_fit[-2] ,' peak 1 ', peak_fit[1],'; diff',Dx )
+            calib_parameter = 2.0/Dx
+        else :
+            calib_parameter = 1
+            print (' UNCALIBRATED ')
     if configuration == "PERPENDICULAR":
-         calib_parameter = 1
+        
+        calib_parameter = 1
+
          
     # print('calib param',calib_parameter)
     # for k in range(1,nfound-1): #calibrating the resolution 
@@ -132,7 +148,10 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
         # print('sigma %.3f mm' % (sigma_fit[k]*calib_parameter))
         # sigma.append(sigma_fit[k])
         sigma.append(sigma_fit[k]*calib_parameter)
-    print ('\naverage sigma value %.3f cm'% (np.mean(sigma)),', st dev sigma %.3f cm'% (np.std(sigma)) ,'root_sum_square %.3f cm'%(sigma_err),', ',sigma,' \n')
+        sigmas_errors.append(sigma_fit_error[k]*calib_parameter)
+    print ('\naverage sigma value %.3f cm'% (np.mean(sigma)),', st dev sigma %.3f cm'% (np.std(sigma)) ,'root_sum_square %.3f cm'%(sigma_err),'\n')
+    print ('sigmas : ', sigma,' \u00B1 ', sigmas_errors,' \n')
+    
     print (' positions ', peak_fit)
     
     canvas.SaveAs(names[0]+'.pdf','pdf')
@@ -150,10 +169,10 @@ for i in range (0,len(names)):
     print('\n (sigmas \u00B1 error) cm', sigmas )
     print('\n (sigmas \u00B1 error) mm \n', np.array(sigmas)*10 )
     string = canvas_titles[i]
-    string =string + (" - Energy: %s,Target: %s,Smearing: %.2f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
+    string =string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
     print (string)
     f_s.write(string)
 f_s.close()
 
-# input('press a key')
+input('press a key')
 
