@@ -2,7 +2,7 @@
 
 n_cores=6
 n_events=100000
-n_runs=1
+n_runs=7
 
 #beam properties
 particle=deuteron
@@ -53,13 +53,14 @@ fi
 make clean
 make -j6
 
-# my_array=(0.1 5 10 15 20 25 29.9)
-my_array=(29.9) 
-
+# my_array=(0.1  5 10 15 20 25 29.9)
+# diff_array=(-0.12653898391960397 -0.18102083710866382 -0.18259513068555297 -0.2821885293846259 -0.11893810067990816 0.4623504105310071 0.6781449768635459)
+subtracted=(0.227 5.181 10.183 15.282 20.119 24.538 29.222)
 for (( i=0; i<$n_runs; i++ ))
 do
-  sed -i .bak "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
-  sed -i .bak "s/TRANSLATE.*/TRANSLATE              	${my_array[$i]}/" config.cfg
+  echo -e "TRANSLATE ${subtracted[$i]}" 
+  # sed -i .bak "s/TRANSLATE.*/TRANSLATE              	$((5 * $i))/" config.cfg
+  sed -i .bak "s/TRANSLATE.*/TRANSLATE              	${subtracted[$i]}/" config.cfg
   # sed -i .bak "s/MINTHETA.*/MINTHETA                $((2 + (2 * $i))).0/" config.cfg
   # sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((2 + (2 * $i))).0/" config.cfg
   ./jepo -m n_event.mac
@@ -78,17 +79,21 @@ done
 #sed -i .bak "s/MAXTHETA.*/MAXTHETA                5.0/" config.cfg
 #sed -i .bak "s/MINTHETA.*/MINTHETA                5.0/" config.cfg
 cd output
-echo "Particle: $particle
-Target: $target
-Energy: $energy
-Smearing: $Smearing
-Configuration: $configuration" > "details_$(date).txt"
+# echo "Particle: $particle
+# Target: $target
+# Energy: $energy
+# Smearing: $Smearing
+# Configuration: $configuration" > "details_$(date).txt"
+
+sed -i .bak "s/TFile f(\"Offsets.*/TFile f(\"Offsets_$i.root\",\"RECREATE\");/" Simulation_runner.cpp
+sed -i .bak "s/f2 = rt.TFile.Open(\"Offsets_.*/f2 = rt.TFile.Open(\"Offsets_$i.root\")/" Offset_plotter.py
+
 root -q -l Simulation_runner.cpp
 python3 Peak_fitter.py
 
-# if [[ "$configuration" == "PARALLEL" ]]
-# then
-#     python3 Offset_plotter.py 
-# fi
+if [[ "$configuration" == "PARALLEL" ]]
+then
+    python3 Offset_plotter.py 
+fi
  
 cd ..
