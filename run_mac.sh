@@ -17,7 +17,7 @@ configuration=PARALLEL    #in all caps
 Smearing=0.227
 # Smearing=0.0
 
-rm -r output/${particle}*-* *.bak
+rm -r output/*.bak
 
 #echo -e "\e[31mNumber of events: $n_events \e[39m..."
 sed -i .bak "s+/run/beamOn.*+/run/beamOn $n_events+" n_event.mac
@@ -85,8 +85,8 @@ cd output
 # Smearing: $Smearing
 # Configuration: $configuration" > "details_$(date).txt"
 
-sed -i .bak "s/TFile f(\"Offsets.*/TFile f(\"Offsets_$i.root\",\"RECREATE\");/" Simulation_runner.cpp
-sed -i .bak "s/f2 = rt.TFile.Open(\"Offsets_.*/f2 = rt.TFile.Open(\"Offsets_$i.root\")/" Offset_plotter.py
+# sed -i .bak "s/TFile f(\"Offsets.*/TFile f(\"Offsets_$i.root\",\"RECREATE\");/" Simulation_runner.cpp
+# sed -i .bak "s/f2 = rt.TFile.Open(\"Offsets_.*/f2 = rt.TFile.Open(\"Offsets_$i.root\")/" Offset_plotter.py
 
 root -q -l Simulation_runner.cpp
 python3 Peak_fitter.py
