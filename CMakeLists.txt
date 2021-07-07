@@ -75,6 +75,7 @@ set(JEPO_SCRIPTS
 	config.cfg
 	run.sh
 	run_mac.sh
+	dE_scan.sh
 	n_event.mac
 )
 

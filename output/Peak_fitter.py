@@ -4,32 +4,42 @@ import math as m
 import time
 
 
-configuration = "PERPENDICULAR"
+configuration = "PARALLEL"
 
 if configuration == "PARALLEL":
     names = ['Hoff_3_11']
+    path_names = ['Offsets.root']
+    
+    ## REAL
+    # names = ['h_eta_offset']
+    # path_names = ['TB_offset.root']
+    
     canvas_names = ['can']
     canvas_titles =['Offset']
-    path_names = ['Offsets.root']
+    spect_sigma = 1.5
+    spect_th    = 0.5
+    
+    
 elif configuration == "PERPENDICULAR":
     names = ['HRa']
     canvas_names = ['can_r']
     canvas_titles =['R_distribution']
     path_names = ['HRa.root']
+    spect_sigma = 100
+    spect_th    = 0.1
 else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 5
-spect_sigma = 100
+n_runs      = 7
 
-spect_th    = 0.05
 
 Target= "Empty"
-Smearing=0.26
+Smearing=0.227
 Energy=270
 
 sigmas = []
+sigmas_errors = []
 units  = []
 
 def root_sum_square(vector_error,calibration):
@@ -44,7 +54,6 @@ def root_sum_square(vector_error,calibration):
     return (quadratic_sum)
 
 def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
-    
     canvas.cd()
     hist.Draw()
     hist.Rebin(rebin_value)
@@ -52,24 +61,35 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
     nfound = spect.Search(hist,spect_sigma,"nobackground",spect_th) #
     print('Found',nfound, 'candidate peaks to fit, sigma tSpect ',spect_sigma, ',th tSpect ',spect_th,'.\n')
     xpeaks = spect.GetPositionX()
+    ypeaks = spect.GetPositionY()
     # xpeaks = [-15.6, -11.6, -8.35, 8.05, 11.93, 15.36]
     xpeak_py = []
+    ypeak_py = []
     for j in range (nfound): #it creates a List from a root buffer
         # print ('Xpeak #',j,' ', xpeaks[j])
         xpeak_py.append(xpeaks[j])
+        ypeak_py.append(ypeaks[j])
         # hist.Fit('gaus','','',xpeaks[j],xpeaks[j])
     # print('xpeak:' , xpeak_py)
+    # pos_couple= [[xpeak_py[p],yp eak_py[p]] for p in range(len(xpeaks))]
+    # ypeak_py.sort()
+    # sorted(pos_couple, key=lambda k:[k[0],k[1]])
+    print('xpeak :', xpeak_py)
+    print ('ypeak ', ypeak_py)
     xpeak_py.sort()
-    print('xpeak sorted:', xpeak_py)
 
     diff_list = [] 
     print(xpeak_py)
-    for x, y in zip(xpeak_py[0::], xpeak_py[1::]): 
-        print ('peaks',x,', ',y, ', Dx ',y-x)
-        diff_list.append(y-x)
-    diff_list.append(diff_list[-1])
-    # # # Printing difference list # #
-    print ("difference list: ", diff_list)
+    if nfound >1:
+        for x, y in zip(xpeak_py[0::], xpeak_py[1::]): 
+            print ('peaks',x,', ',y, ', Dx ',y-x)
+            diff_list.append(y-x)
+        diff_list.append(diff_list[-1])
+        # # # Printing difference list # #
+        print ("difference list: ", diff_list)
+    else:
+        for j in range (nfound):
+            diff_list.append(0)
 
     peak_fit        = []
     peak_fit_error  = []
@@ -80,7 +100,10 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
     # # # print(fit_funcs)
     for j in range(nfound):   
         funct = rt.TF1('funct','gaus') 
-        hist.Fit(funct,'IQ','',xpeak_py[j]-(np.mean(diff_list)/2),xpeak_py[j]+(np.mean(diff_list[j])/2))
+        if nfound > 1:
+            hist.Fit(funct,'IQ','',xpeak_py[j]-(np.mean(diff_list)/2),xpeak_py[j]+(np.mean(diff_list[j])/2))
+        else:
+            hist.Fit(funct,'IQ','',xpeak_py[j] - 0.5, xpeak_py[j] + 0.5)
         # print('##########',j,'range of fit: (',xpeak_py[j]-(diff_list[j]/2),',',xpeak_py[j]+(diff_list[j]/2),') ##########')
         # print (funct.GetParameter(1),funct.GetParameter(2))
         peak_fit.append(funct.GetParameter(1))
@@ -111,17 +134,36 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
 
     # # Calibration # #
     sigma= []
-    sigma_err = root_sum_square(sigma_fit_error,1) #No calibration needed -> Calib param = 1 
+    if configuration == "PARALLEL":
+        if nfound >1 :
+            Dx  = (peak_fit[-2] - peak_fit[1])
+            print('peak -2 ', peak_fit[-2] ,' peak 1 ', peak_fit[1],'; diff',Dx )
+            calib_parameter = 2.0/Dx
+        else :
+            calib_parameter = 1
+            print (' UNCALIBRATED ')
+    if configuration == "PERPENDICULAR":
+        
+        calib_parameter = 1
 
+         
     # print('calib param',calib_parameter)
+    # for k in range(1,nfound-1): #calibrating the resolution 
     for k in range(nfound): #calibrating the resolution 
         # print('sigma %.3f mm' % (sigma_fit[k]*calib_parameter))
-        sigma.append(sigma_fit[k])
-    print ('\naverage sigma value %.3f cm'% (np.mean(sigma)),', st dev sigma %.3f cm'% (np.std(sigma)) ,'root_sum_square %.3f cm'%(sigma_err),', ',sigma,' \n')
+        # sigma.append(sigma_fit[k])
+        sigma.append(sigma_fit[k]*calib_parameter)
+        sigmas_errors.append(sigma_fit_error[k]*calib_parameter)
+    sigma_err = root_sum_square(sigmas_errors,1) #No calibration needed -> Calib param = 1 
+    print ('sigmas : ', sigma,' \u00B1 ', sigmas_errors,' \n')
+    
+    print ('\naverage sigma value %.3f cm'% (np.mean(sigma)),', st dev sigma %.3f cm'% (np.std(sigma)) ,'root_sum_square %.3f cm'%(sigma_err),'\n')
+    print ('sigma : ', sigma,' \u00B1 ', sigmas_errors,' \n')
+    
     print (' positions ', peak_fit)
     
     canvas.SaveAs(names[0]+'.pdf','pdf')
-    return [np.mean(sigma),sigma_err]
+    return [np.mean(sigma),sigma_err]#,pos_couple] 
 
 f_s = open ("sigmas_run.txt","a")
 for i in range (0,len(names)):  
@@ -132,13 +174,14 @@ for i in range (0,len(names)):
     result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs,spect_sigma,spect_th)  
     sigmas.append(result)
    
-    print('\n (sigmas \u00B1 error) cm', sigmas )
-    print('\n (sigmas \u00B1 error) mm \n', np.array(sigmas)*10 )
+    print('\n (sigmas \u00B1 error) ', sigmas,' cm' )
+    print('\n (sigmas \u00B1 error) ', np.array(sigmas)*10, 'mm \n' )
     string = canvas_titles[i]
-    string =string + (" - Energy: %s,Target: %s,Smearing: %.2f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
+    string =string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
     print (string)
     f_s.write(string)
 f_s.close()
 
-# input('press a key')
+# print ("POS couple ". result[2])
+input('press a key')
 
