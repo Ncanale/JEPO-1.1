@@ -674,7 +674,7 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
 
   // Define position of tracker
   G4double posX, posY, posZ, f_off;
-  f_off = 20 + 1.336 -0.038 -0.122 ; //after some iteration of diff_peak.py
+  f_off = 20 + 1.336 - 0.038 - 0.122;//after some iteration of diff_peak.py
 //   f_off = 0 ; 
   if(trCon)     //  For perpendicular configuration
   {
