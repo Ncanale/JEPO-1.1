@@ -4,7 +4,7 @@ import math as m
 import time
 
 
-configuration = "PARALLEL"
+configuration = "PERPENDICULAR"
 
 if configuration == "PARALLEL":
     names = ['Hoff_3_11']
@@ -21,12 +21,16 @@ if configuration == "PARALLEL":
     
     
 elif configuration == "PERPENDICULAR":
-    names = ['HRa']
-    canvas_names = ['can_r']
-    canvas_titles =['R_distribution']
-    path_names = ['HRa.root']
-    spect_sigma = 100
-    spect_th    = 0.1
+    # names = ['HRa']
+    # canvas_names = ['can_r']
+    # canvas_titles =['R_distribution']
+    # path_names = ['HRa.root']
+    names = ['HPh']
+    canvas_names = ['can_Ph']
+    canvas_titles =['Ph_distribution']
+    path_names = ['HPh.root']
+    spect_sigma = 10
+    spect_th    = 0.5
 else:
     input ("CHECK THE CONFIGURATIONS")
 
@@ -81,9 +85,9 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
     diff_list = [] 
     print(xpeak_py)
     if nfound >1:
-        for x, y in zip(xpeak_py[0::], xpeak_py[1::]): 
-            print ('peaks',x,', ',y, ', Dx ',y-x)
-            diff_list.append(y-x)
+        for x1, x2 in zip(xpeak_py[0::], xpeak_py[1::]): 
+            print ('peaks',x1,', ',x2, ', Dx ',x2-x1)
+            diff_list.append(x2-x1)
         diff_list.append(diff_list[-1])
         # # # Printing difference list # #
         print ("difference list: ", diff_list)
@@ -134,16 +138,17 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
 
     # # Calibration # #
     sigma= []
+    calibration_edges =[ 5.181 ,24.538]
     if configuration == "PARALLEL":
         if nfound >1 :
             Dx  = (peak_fit[-2] - peak_fit[1])
             print('peak -2 ', peak_fit[-2] ,' peak 1 ', peak_fit[1],'; diff',Dx )
-            calib_parameter = 2.0/Dx
+            distance = (calibration_edges[1]-calibration_edges[0])/10
+            calib_parameter = distance/Dx
         else :
             calib_parameter = 1
             print (' UNCALIBRATED ')
     if configuration == "PERPENDICULAR":
-        
         calib_parameter = 1
 
          
@@ -174,10 +179,16 @@ for i in range (0,len(names)):
     result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs,spect_sigma,spect_th)  
     sigmas.append(result)
    
-    print('\n (sigmas \u00B1 error) ', sigmas,' cm' )
-    print('\n (sigmas \u00B1 error) ', np.array(sigmas)*10, 'mm \n' )
+   
+    # print('\n (sigmas \u00B1 error) ', sigmas,' cm' )
+    # print('\n (sigmas \u00B1 error) ', np.array(sigmas)*10, 'mm \n' )
+    # string = canvas_titles[i]
+    # string =string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
+   
+    print('\n (sigmas \u00B1 error) ', sigmas,' rad' )
+    print('\n (sigmas \u00B1 error) ', np.array(sigmas)*1000,' mrad' )
     string = canvas_titles[i]
-    string =string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
+    string = string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mrad,Sigma_err: %.3f mrad \n" % (Energy,Target,Smearing,result[0]*1000,result[1]*1000))
     print (string)
     f_s.write(string)
 f_s.close()

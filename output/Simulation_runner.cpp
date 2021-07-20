@@ -12,17 +12,17 @@
 
 //comment this section if ROOT is installed from source
 
-#include <root/TCanvas.h>
-#include <root/TChain.h>
-#include <root/TH1.h>
-#include <root/TLeaf.h>
-#include <root/TH2.h>
-#include <root/TThread.h>
-#include <root/TROOT.h>
-#include <root/TRandom3.h>
-#include <root/TFile.h>
-#include <root/TError.h>
-#include <root/TLatex.h>
+// #include <root/TCanvas.h>
+// #include <root/TChain.h>
+// #include <root/TH1.h>
+// #include <root/TLeaf.h>
+// #include <root/TH2.h>
+// #include <root/TThread.h>
+// #include <root/TROOT.h>
+// #include <root/TRandom3.h>
+// #include <root/TFile.h>
+// #include <root/TError.h>
+// #include <root/TLatex.h>
 
 
 #define PERPENDICULAR 0
@@ -47,8 +47,8 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; 										// total number of layer modules
-const int n_runs = 7;									// number of runs -> radii, translations, etc
-const int nth = 8; 										// number of threads (also to expect from file names)
+const int n_runs = 8;									// number of runs -> radii, translations, etc
+const int nth = 6; 										// number of threads (also to expect from file names)
 const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
 const int Tn = CN/2; 									// number of front facing modules
 const Double_t Tb = 6; 								// tracker module base in cm
@@ -59,6 +59,7 @@ valarray<Long64_t> EC(Long64_t(0),nth);
 array<Long64_t,n_runs> NR;
 array<TH2F*,nth> HmapXY,HmapRP,HmapGXY,HmapGRP;
 array<TH1F*,nth> HRa, HPh;
+array<array<TH1F*,n_runs>,nth> HRaR, HPhR;
 array<array<TH1F*,CN>,nth> Hf, Hb;
 array<array<array<TH1F*,CN>,CN>,nth> HetaF, HetaB, Hoff;
 array<array<array<array<TH1F*,CN>,CN>,n_runs>,nth> HoffR;
@@ -81,7 +82,7 @@ Double_t dF = d_lyso - 7.0;		//distance of source from start of front layer
 Double_t dB = d_lyso - 5.0;		//distance of source from start of back layer
 
 // configuration can be set to perpendicular or parallel
-bool configuration = PARALLEL;
+bool configuration = PERPENDICULAR;
 
 bool plot_slices = !configuration && true;
 bool plot_map = !configuration && true;
@@ -168,6 +169,8 @@ void* SR_func(void* ptr)
 			if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
 			if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPh[M[0]]->Fill(atan2(yl,xl));
+			if(plot_slices) HRaR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl));
+			if(plot_slices) HPhR[M[0]][M[3]]->Fill(atan2(yl,xl));
 		}
 
 		if((tF == 1) && (tB == 1) && plot_offsets)
@@ -198,7 +201,12 @@ void init_vars()
 		if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
 		if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
-		if(plot_slices) HPh[i] = new TH1F("HPh", "#phi Distribution;#phi;Counts",800,-4,4);
+		if(plot_slices) HPh[i] = new TH1F("HPh", "#phi Distribution;#phi;Counts",3000,-4,4);
+		for(int j=0; j<n_runs; j++)
+		{
+			if(plot_slices) HRaR[i][j] = new TH1F((string("HRaR_")+to_string(j)).data(), "Radius Distribution per Run;R;Counts",3000,0,21);
+			if(plot_slices) HPhR[i][j] = new TH1F((string("HPhR_")+to_string(j)).data(), "#phi Distribution per Run;#phi;Counts",3000,-4,4);
+		}
 	}
 	for(int i=0; i<CN; i++)
 	{
@@ -281,6 +289,16 @@ template <typename T> array<T,CN> merge(array<array<T,CN>,nth> A)
 {
 	array<T,CN> HA;
 	for(int i=0; i<CN; i++)
+	{
+		HA[i] = (T) A[0][i]->Clone();
+		for(int j=1; j<nth; j++) HA[i]->Add(A[j][i]);
+	}
+	return HA;
+}
+template <typename T> array<T,n_runs> merge(array<array<T,n_runs>,nth> A)
+{
+	array<T,n_runs> HA;
+	for(int i=0; i<n_runs; i++)
 	{
 		HA[i] = (T) A[0][i]->Clone();
 		for(int j=1; j<nth; j++) HA[i]->Add(A[j][i]);
@@ -421,7 +439,6 @@ void Simulation_runner()
 		cMap_2->SaveAs("RPmap.pdf","pdf");
 		HmapRPm->SaveAs("HmapRP.root","root");
 
-
 		if(plot_slices)
 		{
 			TH1F* HRam = merge(HRa),* HPhm = merge(HPh);
@@ -433,6 +450,28 @@ void Simulation_runner()
 			HRam->Draw();
 			cSliceR->SaveAs("Slices.pdf)","pdf");
 			HRam->SaveAs("HRa.root","root");
+	
+			array<TH1F*,n_runs> HRaRm = merge(HRaR), HPhRm = merge(HPhR);
+			TCanvas* cSlicePhR	= new TCanvas("cSlicePhR", "Phi Distribution per Run", 1000, 1000);
+			TFile fPhR("HPhR.root","RECREATE");
+			cSlicePhR.cd()
+			for (int j=0;j<n_runs;j++)
+			{
+				HPhRm[j]->Draw();
+				cSlicePhR->SaveAs((string("Phi_Slices_run.pdf") + string(j==0 ? "(" : "") + string(j==(n_runs-1) ? ")" : "")).data(),"pdf");
+				HPhRm[j]->Write();
+			}
+			fPhR.Close();
+			TCanvas* cSliceRR 	= new TCanvas("cSliceRR", "R Distribution per Run", 1000, 1000);
+			TFile fRR("HRR.root","RECREATE");
+			cSliceRR.cd()
+			for (int j=0;j<n_runs;j++)
+			{
+				HRaRm[j]->Draw();
+				cSliceRR->SaveAs((string("R_Slices_run.pdf") + string(j==0 ? "(" : "") + string(j==(n_runs-1) ? ")" : "")).data(),"pdf");
+				HRaRm[j]->SaveAs("HRa.root","root");
+			}
+			fRR.Close();
 		}
 	}
 	if(plot_generator)
