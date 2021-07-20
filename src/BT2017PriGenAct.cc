@@ -101,8 +101,11 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
     }        
     else {
         // Set theta distribution 
-        m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
-        m_beamAxisPhi   = CLHEP::RandFlat::shoot(0.0, 2.*M_PI );
+        // m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
+        // m_beamAxisPhi   = CLHEP::RandFlat::shoot(0.0, 2.*M_PI );
+        
+		m_beamAxisPhi= CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
+        m_beamAxisTheta   = CLHEP::RandFlat::shoot(0.02,0.3); // (0.0, 2.*M_PI );
         
 //     if( m_MinTheta < 1. )
 //         m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
@@ -130,7 +133,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	m_matrix->rotateY( -m_MomDir.x());
 	m_matrix->rotateX(  m_MomDir.y());
 
-  G4int NoE = 200000;
+  G4int NoE = 300000;
   if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
 	PG -> SetParticleMomentumDirection(m_MomDir);
 

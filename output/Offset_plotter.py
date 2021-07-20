@@ -1,9 +1,11 @@
 import ROOT as rt
 import numpy as np
 n_runs = 7
+spect_sigma = 1.5
+spect_th    = 0.9
 
-xpeak_sim= [-1.085, 0.24500000000000005, -0.0816666666666666, -0.7583333333333333, -0.4316666666666667, -1.4116666666666666, 0.5483333333333333]
-ypeak_sim = [108771.0, 110624.0, 92844.0, 91665.0, 85419.0, 80419.0, 71689.0]
+# xpeak_sim= [-1.085, 0.24500000000000005, -0.0816666666666666, -0.7583333333333333, -0.4316666666666667, -1.4116666666666666, 0.5483333333333333]
+# ypeak_sim = [108771.0, 110624.0, 92844.0, 91665.0, 85419.0, 80419.0, 71689.0]
 
 # matrix2 = list(zip(xpeak_sim, ypeak_sim))
 # print("UnSort ", matrix2)
@@ -11,18 +13,31 @@ ypeak_sim = [108771.0, 110624.0, 92844.0, 91665.0, 85419.0, 80419.0, 71689.0]
 # print("Sorted ", mat_sort)
 # input()
 
-y_sim_sorted = [80419,108771,91665,85419,92844,110624,71689]
+# y_sim_sorted = [80419,108771,91665,85419,92844,110624,71689]
 ypeak_TB = [284,944,1458,1635,1444,1125,497]
-ratio=[]
-for i in range(len(y_sim_sorted)):
-    ratio.append(y_sim_sorted[i]/ypeak_TB[i]) 
-print ('ratios:', ratio)
+Y_g4_hist =[]
 
+def peak_fitter(hist,n_peak,spect_sigma,spect_th):
+    hist.Draw()
+    spect = rt.TSpectrum((n_peak))
+    nfound = spect.Search(hist,spect_sigma,"nobackground",spect_th) #
+    xpeaks = spect.GetPositionX()
+    ypeaks = spect.GetPositionY()
+    # xpeaks = [-15.6, -11.6, -8.35, 8.05, 11.93, 15.36]
+    xpeak_py = []
+    ypeak_py = []
+    for j in range (nfound): #it creates a List from a root buffer
+        xpeak_py.append(xpeaks[j])
+        ypeak_py.append(ypeaks[j])
+    # print('xpeak :', xpeak_py)
+    # print('ypeak :', ypeak_py)
+    return (ypeak_py[n_peak-1])
 
 h1   = rt.TH1F("h_eta_offset","offset_TB",200,-2,2)
 h2   = rt.TH1F("Hoff_3_11","offset_G4",200,-2,2)
 h_2        = [rt.TH1F("Hoff_3_11","offset_G4",200,-2,2)]*n_runs
 h_2_buffer  = [rt.TH1F("Hoff_3_11","offset_G4",200,-2,2)]*n_runs
+hSum   = rt.TH1F("hSum","HSum_G4",180,-2.1,2.1)
 h3   = rt.THStack("h3","Stacked Offsets")
 # h3   = rt.TH1F("h3","offsets",200,-2,2)
 peak_fit        = []
@@ -47,9 +62,17 @@ c1.Divide(3)
 c1.cd(1)
 h1.Draw()
 h1.SetLineColor(rt.kRed)
+
 c1.cd(2)
 for i in range (n_runs):
     h_2[i].Draw('same')
+    Y_g4_hist.append(peak_fitter(h_2[i],1,spect_sigma,spect_th))
+print('Y ',Y_g4_hist)
+
+ratio=[]
+for i in range(len(Y_g4_hist)):
+    ratio.append(Y_g4_hist[i]/ypeak_TB[i]) 
+print ('ratios:', ratio)
 # h2.Draw()
 c1.cd(3)
 factor = 1
@@ -92,11 +115,15 @@ for i in range (n_runs): h_2_buffer[i].Draw("same")
 
 c2 = rt.TCanvas("c2", "Overlaps")
 c2.cd()
-h1_buffer.Draw('')
+h1_buffer.Draw('E1')
 h1_buffer.SetLineColor(rt.kRed)
-for i in range (n_runs): h_2_buffer[i].Draw("same")
+for i in range (n_runs): 
+    h_2_buffer[i].Draw("same")
+    hSum.Add(h_2_buffer[i])
+hSum.Draw('same')
+hSum.SetLineColor(rt.kGreen)
 h2_buffer.Draw('same')
-h2_buffer.SetLineColor(rt.kGreen)
+h2_buffer.SetLineColor(rt.kYellow)
 
 # h1 = rt.TH1F("h1", "h1", 100, -5, 5)
 # h1.FillRandom("gaus", 3000)
