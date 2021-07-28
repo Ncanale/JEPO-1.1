@@ -4,7 +4,8 @@ import math as m
 import time
 
 
-configuration = "PERPENDICULAR"
+configuration = "PARALLEL"
+setting = "THETA"
 
 if configuration == "PARALLEL":
     names = ['Hoff_3_11']
@@ -21,16 +22,26 @@ if configuration == "PARALLEL":
     
     
 elif configuration == "PERPENDICULAR":
-    # names = ['HRa']
-    # canvas_names = ['can_r']
-    # canvas_titles =['R_distribution']
-    # path_names = ['HRa.root']
-    names = ['HPh']
-    canvas_names = ['can_Ph']
-    canvas_titles =['Ph_distribution']
-    path_names = ['HPh.root']
-    spect_sigma = 10
-    spect_th    = 0.5
+        # names = ['HRa']
+        # canvas_names = ['can_r']
+        # canvas_titles =['R_distribution']
+        # path_names = ['HRa.root']
+    if setting == "THETA":
+        names = ['HTh']
+        canvas_names = ['can_Th']
+        canvas_titles =['Th_distribution']
+        path_names = ['HTh.root']
+        spect_sigma = 0.01
+        spect_th    = 0.5
+    elif setting =="PHI":
+        names = ['HPh']
+        canvas_names = ['can_Ph']
+        canvas_titles =['Ph_distribution']
+        path_names = ['HPh.root']
+        spect_sigma = 10
+        spect_th    = 0.5
+    else:
+        input ("CHECK THE SETTINGS")
 else:
     input ("CHECK THE CONFIGURATIONS")
 
@@ -41,6 +52,9 @@ n_runs      = 15
 Target= "Empty"
 Smearing=0.19
 Energy=270
+
+d_lyso = 66.0		 #distance of source from start of lysos
+dF = d_lyso - 7.0 	
 
 sigmas = []
 sigmas_errors = []
@@ -138,13 +152,14 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,spect_sigma,spect_th):
 
     # # Calibration # #
     sigma= []
-    calibration_edges =[ 5.181 ,24.538]
+    calibration_edges =[5.181, 24.538]
     if configuration == "PARALLEL":
         if nfound >1 :
             Dx  = (peak_fit[-2] - peak_fit[1])
             print('peak -2 ', peak_fit[-2] ,' peak 1 ', peak_fit[1],'; diff',Dx )
             distance = (calibration_edges[1]-calibration_edges[0])/10
             calib_parameter = distance/Dx
+            print ('CALIBRATION PARAMETER = ', calib_parameter,' cm/offset ')
         else :
             calib_parameter = 1
             print (' UNCALIBRATED ')
@@ -179,17 +194,35 @@ for i in range (0,len(names)):
     result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs,spect_sigma,spect_th)  
     sigmas.append(result)
    
-   
-    # print('\n (sigmas \u00B1 error) ', sigmas,' cm' )
-    # print('\n (sigmas \u00B1 error) ', np.array(sigmas)*10, 'mm \n' )
-    # string = canvas_titles[i]
-    # string =string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
-   
-    print('\n (sigmas \u00B1 error) ', sigmas,' rad' )
-    print('\n (sigmas \u00B1 error) ', np.array(sigmas)*1000,' mrad' )
-    string = canvas_titles[i]
-    string = string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mrad,Sigma_err: %.3f mrad \n" % (Energy,Target,Smearing,result[0]*1000,result[1]*1000))
-    print (string)
+    if (configuration == 'PARALLEL'):
+        print('\n (sigmas \u00B1 error) ', sigmas,' cm' )
+        print('\n (sigmas \u00B1 error) ', np.array(sigmas)*10, 'mm \n' )
+        string = canvas_titles[i]
+        string =string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mm,Sigma_err: %.3f mm \n" % (Energy,Target,Smearing,result[0]*10,result[1]*10))
+    elif (configuration == 'PERPENDICULAR'):
+        if(setting == "THETA"):
+            # print('\n (sigmas \u00B1 error) ', sigmas,' cm' )
+            # print('\n (sigmas \u00B1 error) ', np.array(sigmas)*10,' mm \n' )
+            print('\n (sigmas \u00B1 error @ FRONT LAYER) ', np.array(sigmas)*1000,' mrad \n' )
+            print('\n (sigmas \u00B1 error @ FRONT LAYER) ', np.array(sigmas)*180/(np.pi),' ° \n' )
+            string = canvas_titles[i]
+            string = string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mrad,Sigma_err: %.3f mrad \n" % (Energy,Target,Smearing,result[0]*1000,result[1]*1000))
+            print(string)
+            string_Deg = canvas_titles[i]
+            string_Deg = string_Deg + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f °,Sigma_err: %.3f °\n" % (Energy,Target,Smearing,result[0]*(180/np.pi),result[1]*(180/np.pi)))
+            print(string_Deg)
+        elif (setting == "PHI"):
+            print('\n (sigmas \u00B1 error) ', sigmas,' rad' )
+            print('\n (sigmas \u00B1 error) ', np.array(sigmas)*1000,' mrad' )
+            # print('\n (sigmas \u00B1 error) ', sigmas*(180/np.pi),' °' )
+            string = canvas_titles[i]
+            string = string + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f mrad,Sigma_err: %.3f mrad \n" % (Energy,Target,Smearing,result[0]*1000,result[1]*1000))
+            print(string)
+            string_Deg = canvas_titles[i]
+            string_Deg = string_Deg + (" - Energy: %s,Target: %s,Smearing: %.3f,Sigma: %.3f °,Sigma_err: %.3f °\n" % (Energy,Target,Smearing,result[0]*(180/np.pi),result[1]*(180/np.pi)))
+            print(string_Deg)
+    else:
+        print('CHECK CONFIGURATION')
     f_s.write(string)
 f_s.close()
 
