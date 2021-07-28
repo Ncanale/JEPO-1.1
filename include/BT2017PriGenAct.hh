@@ -81,23 +81,26 @@ class BT2017PriGenAct: public G4VUserPrimaryGeneratorAction
     G4ParticleDefinition* 		m_Par;
     G4double 					m_KinEgy;
     G4int						m_eventID;
+		G4int m_peID;
+		G4bool m_FlagBeamFile;
 
     G4RotationMatrix			*m_matrix ;
     G4double					m_beamAxisTheta , m_beamAxisPhi;
     
 
   public:
-	BT2017PriGenAct(BT2017ConMan* CM);
-	~BT2017PriGenAct();
+		BT2017PriGenAct(BT2017ConMan* CM);
+		~BT2017PriGenAct();
 
-  virtual void GeneratePrimaries(G4Event* anEvent);
-	G4double GetTheta();
-	G4double GetPhi();
-	G4double GetKinEgy();
-	G4double GetPosX();
-	G4double GetPosY();
-	G4int GetParticle();
-	G4int GetGenEventID();
+		virtual void GeneratePrimaries(G4Event* anEvent);
+		G4double GetTheta();
+		G4double GetPhi();
+		G4double GetKinEgy();
+		G4double GetPosX();
+		G4double GetPosY();
+		G4int GetParticle();
+		G4int GetGenEventID();
+		std::fstream f;
 };
 
 #endif

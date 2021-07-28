@@ -12,17 +12,17 @@
 
 //comment this section if ROOT is installed from source
 
-// #include <root/TCanvas.h>
-// #include <root/TChain.h>
-// #include <root/TH1.h>
-// #include <root/TLeaf.h>
-// #include <root/TH2.h>
-// #include <root/TThread.h>
-// #include <root/TROOT.h>
-// #include <root/TRandom3.h>
-// #include <root/TFile.h>
-// #include <root/TError.h>
-// #include <root/TLatex.h>
+#include <root/TCanvas.h>
+#include <root/TChain.h>
+#include <root/TH1.h>
+#include <root/TLeaf.h>
+#include <root/TH2.h>
+#include <root/TThread.h>
+#include <root/TROOT.h>
+#include <root/TRandom3.h>
+#include <root/TFile.h>
+#include <root/TError.h>
+#include <root/TLatex.h>
 
 
 #define PERPENDICULAR 0
@@ -47,8 +47,8 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; 										// total number of layer modules
-const int n_runs = 8;									// number of runs -> radii, translations, etc
-const int nth = 6; 										// number of threads (also to expect from file names)
+const int n_runs = 15;								// number of runs -> radii, translations, etc
+const int nth = 8; 										// number of threads (also to expect from file names)
 const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
 const int Tn = CN/2; 									// number of front facing modules
 const Double_t Tb = 6; 								// tracker module base in cm
@@ -454,7 +454,7 @@ void Simulation_runner()
 			array<TH1F*,n_runs> HRaRm = merge(HRaR), HPhRm = merge(HPhR);
 			TCanvas* cSlicePhR	= new TCanvas("cSlicePhR", "Phi Distribution per Run", 1000, 1000);
 			TFile fPhR("HPhR.root","RECREATE");
-			cSlicePhR.cd()
+			cSlicePhR->cd();
 			for (int j=0;j<n_runs;j++)
 			{
 				HPhRm[j]->Draw();
@@ -464,7 +464,7 @@ void Simulation_runner()
 			fPhR.Close();
 			TCanvas* cSliceRR 	= new TCanvas("cSliceRR", "R Distribution per Run", 1000, 1000);
 			TFile fRR("HRR.root","RECREATE");
-			cSliceRR.cd()
+			cSliceRR->cd();
 			for (int j=0;j<n_runs;j++)
 			{
 				HRaRm[j]->Draw();

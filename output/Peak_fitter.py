@@ -35,11 +35,11 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 7
+n_runs      = 15
 
 
 Target= "Empty"
-Smearing=0.227
+Smearing=0.19
 Energy=270
 
 sigmas = []

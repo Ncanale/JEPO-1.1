@@ -17,6 +17,9 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 	PG = new G4ParticleGun();
     
     //ROOT::EnableImplicitMT( m_CM->GetNofTRD() );
+	
+	m_peID = 0;
+	m_FlagBeamFile = 0;
     
 	// Gun position
 	m_WorldZ = m_CM->GetWorldZ();
@@ -24,7 +27,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 	m_BeamPY = m_CM->GetBeamAY();
 	m_BeamPZ = m_CM->GetBeamAZ();
 
-    m_BeamDX = m_CM->GetBeamDX();
+	m_BeamDX = m_CM->GetBeamDX();
 	m_BeamDY = m_CM->GetBeamDY();
 
 	m_PolIndex = m_CM->GetBeamPO();
@@ -44,6 +47,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 	// Kinetic energy
 	m_KinEgy = m_CM->GetBeamKE();
 	PG->SetParticleEnergy(m_KinEgy);
+	if(m_FlagBeamFile) f.open("beam.in", std::fstream::in);
 
 	// Polarization
 // 	m_Pol = G4ThreeVector(0., 1., 0.);
@@ -82,6 +86,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 BT2017PriGenAct::~BT2017PriGenAct()
 {
 	delete PG;
+	f.close();
 }
 
 //////////////////////////////////////////////////
@@ -104,8 +109,8 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
         // m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
         // m_beamAxisPhi   = CLHEP::RandFlat::shoot(0.0, 2.*M_PI );
         
-		m_beamAxisPhi= CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
-        m_beamAxisTheta   = CLHEP::RandFlat::shoot(0.02,0.3); // (0.0, 2.*M_PI );
+				m_beamAxisPhi= CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
+        m_beamAxisTheta   = CLHEP::RandFlat::shoot(0.05,0.3); // (0.0, 2.*M_PI );
         
 //     if( m_MinTheta < 1. )
 //         m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
@@ -133,15 +138,28 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	m_matrix->rotateY( -m_MomDir.x());
 	m_matrix->rotateX(  m_MomDir.y());
 
-  G4int NoE = 300000;
+	for(int i=m_peID;i<(m_eventID-1);i++) f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+	m_peID = m_eventID;
+
+  G4int NoE = 100000;
   if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
 	PG -> SetParticleMomentumDirection(m_MomDir);
 
-	// 2D Gaussian
-	G4double dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
-	G4double dY = G4RandGauss::shoot(0., m_BeamDY / mm / 1.0); // 1 sigma
+	G4double dX = 0, dY = 0, dZ = 0;
+	if(m_FlagBeamFile)		// Beam Distribution from file
+	{
+		f>>dX>>dY>>dZ;
+		dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
+		dY = dY + 21.1095;
+	}
+	else		// 2D Gaussian
+	{
+		dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
+		dY = G4RandGauss::shoot(0., m_BeamDY / mm / 1.0); // 1 sigma
+	}
+	
     
-	m_GunPos = G4ThreeVector(m_BeamPX + dX * mm, m_BeamPY + dY * mm, m_BeamPZ*mm);
+	m_GunPos = G4ThreeVector(m_BeamPX + dX * mm, m_BeamPY + dY * mm, m_BeamPZ + dZ * mm);
 	//m_GunPos = G4ThreeVector(660 * sin(m_beamAxisTheta) * cos(m_beamAxisPhi) + dX, 660 * sin(m_beamAxisTheta) *sin(m_beamAxisPhi) + dY, m_BeamPZ);
 	PG->SetParticlePosition(m_GunPos);
 
