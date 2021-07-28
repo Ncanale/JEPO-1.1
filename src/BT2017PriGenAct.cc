@@ -91,7 +91,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 {
 	// event ID
 	m_eventID = event->GetEventID();
-
+																										G4String angle="PHI";
     if( m_PolIndex ) {
       /*
         hGenerator->GetRandom2( phi, theta );
@@ -100,13 +100,17 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
       */
     }        
     else {
-        // Set theta distribution 
-        // m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
-        // m_beamAxisPhi   = CLHEP::RandFlat::shoot(0.0, 2.*M_PI );
-        
-		m_beamAxisPhi= CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
-        m_beamAxisTheta   = CLHEP::RandFlat::shoot(0.02,0.3); // (0.0, 2.*M_PI );
-        
+        // Set angle distribution 
+		if(angle == "THETA") //FOR THETA DISTRIBUTION
+        {
+			m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
+        	m_beamAxisPhi   = CLHEP::RandFlat::shoot(0.0, 2.*M_PI );
+		}
+		else if (angle == "PHI") //FOR PHI DISTRIBUTION
+		{ 
+			m_beamAxisPhi= CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
+    	    m_beamAxisTheta   = CLHEP::RandFlat::shoot(0.02,0.3); // (0.0, 2.*M_PI );
+		}
 //     if( m_MinTheta < 1. )
 //         m_beamAxisTheta = CLHEP::RandFlat::shoot(m_MinTheta, m_MaxTheta); // uniform distribution of polar angle
 //     else
@@ -133,14 +137,21 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	m_matrix->rotateY( -m_MomDir.x());
 	m_matrix->rotateX(  m_MomDir.y());
 
-  G4int NoE = 300000;
+  G4int NoE = 50000;
   if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
 	PG -> SetParticleMomentumDirection(m_MomDir);
 
 	// 2D Gaussian
+	// G4double dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
+	// G4double dY = G4RandGauss::shoot(0., m_BeamDY / mm / 1.0); // 1 sigma
+	// TB like beam
 	G4double dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
-	G4double dY = G4RandGauss::shoot(0., m_BeamDY / mm / 1.0); // 1 sigma
+	G4double par[5] =  {-0.79505, 0.0118796, 4.53054, 0.223918, 0.68854};
+	
+	G4double y = G4RandFlat::shoot(0., 1.0); 
+	G4double f = par[0]+par[1]*tan(log(par[2]*y + par[3])) + par[4]*y;
     
+	G4double dY = (f-1)*15 + 21.1095; //TB eta F shape + f_offset  
 	m_GunPos = G4ThreeVector(m_BeamPX + dX * mm, m_BeamPY + dY * mm, m_BeamPZ*mm);
 	//m_GunPos = G4ThreeVector(660 * sin(m_beamAxisTheta) * cos(m_beamAxisPhi) + dX, 660 * sin(m_beamAxisTheta) *sin(m_beamAxisPhi) + dY, m_BeamPZ);
 	PG->SetParticlePosition(m_GunPos);

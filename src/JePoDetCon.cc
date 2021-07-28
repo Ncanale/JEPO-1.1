@@ -674,8 +674,9 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
 
   // Define position of tracker
   G4double posX, posY, posZ, f_off;
-  f_off = 20 + 1.336 - 0.038 - 0.122;//after some iteration of diff_peak.py
-//   f_off = 0 ; 
+  f_off = 21.1095; 
+//   f_off = 0; 
+// f_off = 20+1.336-0.038-0.122; 
   if(trCon)     //  For perpendicular configuration
   {
     posX = translate * (ff + fb - bf - bb) + (-15 + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
@@ -692,7 +693,7 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
   
 	// Define rotation of tracker
   tRot[trID] = new G4RotationMatrix;
-	RotH = new G4RotationMatrix;
+  RotH = new G4RotationMatrix;
   tRot[trID] -> rotateX(-M_PI/2 * (ff - fb + bf - bb));
   tRot[trID] -> rotateY(-M_PI/2 * (trCon ? (ff + fb) : 1));    //  Y-rotation depends on configuration
 
