@@ -47,7 +47,7 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; 										// total number of layer modules
-const int n_runs = 8;									// number of runs -> radii, translations, etc
+const int n_runs = 7;									// number of runs -> radii, translations, etc
 const int nth = 6; 										// number of threads (also to expect from file names)
 const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
 const int Tn = CN/2; 									// number of front facing modules
@@ -57,9 +57,9 @@ const Double_t Tt = 2; 								// tracker module thickness in cm
 
 valarray<Long64_t> EC(Long64_t(0),nth);
 array<Long64_t,n_runs> NR;
-array<TH2F*,nth> HmapXY,HmapRP,HmapGXY,HmapGRP;
-array<TH1F*,nth> HRa, HPh;
-array<array<TH1F*,n_runs>,nth> HRaR, HPhR;
+array<TH2F*,nth> HmapXY,HmapRP,HmapThP,HmapGXY,HmapGRP;
+array<TH1F*,nth> HRa, HPh, HTh;
+array<array<TH1F*,n_runs>,nth> HRaR, HPhR, HThR;
 array<array<TH1F*,CN>,nth> Hf, Hb;
 array<array<array<TH1F*,CN>,CN>,nth> HetaF, HetaB, Hoff;
 array<array<array<array<TH1F*,CN>,CN>,n_runs>,nth> HoffR;
@@ -82,7 +82,7 @@ Double_t dF = d_lyso - 7.0;		//distance of source from start of front layer
 Double_t dB = d_lyso - 5.0;		//distance of source from start of back layer
 
 // configuration can be set to perpendicular or parallel
-bool configuration = PERPENDICULAR;
+bool configuration = PARALLEL;
 
 bool plot_slices = !configuration && true;
 bool plot_map = !configuration && true;
@@ -120,7 +120,7 @@ void* SR_func(void* ptr)
 			}
 		}
 
-		Double_t xB=NaN, yF=NaN, zB=NaN, zF=NaN;
+		Double_t xB=NaN, yF=NaN, zB=NaN, zF=NaN, tanThF = NaN, tanThB = NaN;
 		int tF=0, tB=0, ep=0;
 		array<int,2> Fiv, Biv;      //index values
 		for(int q=0; q<CN/2; q++)
@@ -134,7 +134,8 @@ void* SR_func(void* ptr)
 					if(plot_ratios) HratioF[M[0]][q][r]->Fill(F[M[0]][q],F[M[0]][r]);
 					ep = r - q - Tn;
 					zF = (1 + pow(-1,ep+1)*etaF[M[0]][q][r])*(Tt/2);
-					yF = zF * (Tb/4) * (2*Tn - 4*q - 3 + (1 - etaF[M[0]][q][r])*pow(-1,ep)) / (dF + 1 + etaF[M[0]][q][r]);
+					tanThF = (Tb/4) * (2*Tn - 4*q - 3 + (1 - etaF[M[0]][q][r])*pow(-1,ep)) / (dF + 1 + etaF[M[0]][q][r]);
+					yF = zF * tanThF;
 					Fiv = {q,r};
 					tF = 1;
 				}
@@ -149,7 +150,8 @@ void* SR_func(void* ptr)
 					if(plot_ratios) HratioB[M[0]][q][r]->Fill(B[M[0]][q],B[M[0]][r]);
 					ep = r - q - Tn;
 					zB = (1 + pow(-1,ep+1)*etaB[M[0]][q][r])*Tt/2;
-					xB = zB * (Tb/4) * (2*Tn - 4*q - 3 + (1 - etaB[M[0]][q][r])*pow(-1,ep)) / (dB + 1 + etaB[M[0]][q][r]);
+					tanThB = (Tb/4) * (2*Tn - 4*q - 3 + (1 - etaB[M[0]][q][r])*pow(-1,ep)) / (dB + 1 + etaB[M[0]][q][r]);
+					xB = zB * tanThB;
 					Biv = {q,r};
 					tB = 1;
 				}
@@ -167,10 +169,15 @@ void* SR_func(void* ptr)
 			Double_t yl = (dF/zF)*yF;
 			if(plot_map) HmapXY[M[0]]->Fill(xl,yl);
 			if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
+			if(plot_map) HmapThP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl)/dF);
+
 			if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPh[M[0]]->Fill(atan2(yl,xl));
+			if(plot_slices) HTh[M[0]]->Fill(sqrt(xl*xl + yl*yl));
+
 			if(plot_slices) HRaR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPhR[M[0]][M[3]]->Fill(atan2(yl,xl));
+			if(plot_slices) HThR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl)/dF);
 		}
 
 		if((tF == 1) && (tB == 1) && plot_offsets)
@@ -198,14 +205,17 @@ void init_vars()
 	{
 		if(plot_map) HmapXY[i] = new TH2F("HmapXY", "X-Y Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_map) HmapRP[i] = new TH2F("HmapRP", "R-#phi Map;#phi;R",500,-4,4,500,0,21);
+		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",500,-4,4,510,-0.01,0.5);
 		if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
 		if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
 		if(plot_slices) HPh[i] = new TH1F("HPh", "#phi Distribution;#phi;Counts",3000,-4,4);
+		if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",510,-0.01,0.5);
 		for(int j=0; j<n_runs; j++)
 		{
 			if(plot_slices) HRaR[i][j] = new TH1F((string("HRaR_")+to_string(j)).data(), "Radius Distribution per Run;R;Counts",3000,0,21);
 			if(plot_slices) HPhR[i][j] = new TH1F((string("HPhR_")+to_string(j)).data(), "#phi Distribution per Run;#phi;Counts",3000,-4,4);
+			if(plot_slices) HThR[i][j] = new TH1F((string("HThR_")+to_string(j)).data(), "#theta Distribution per Run;#phi;Counts",510,-0.01,0.5);
 		}
 	}
 	for(int i=0; i<CN; i++)
@@ -225,11 +235,11 @@ void init_vars()
 				if(plot_offsets)
 				{
 					Hoff[j][i][k] = new TH1F((string("Hoff_")+to_string(i)+string("_")+to_string(k)).data(),
-					        (string("Offset_")+to_string(i)+string("_")+to_string(k)+string(";Offset Value;Counts")).data(),180,-2.1,2.1);
+					        (string("Offset_")+to_string(i)+string("_")+to_string(k)+string(";Offset Value;Counts")).data(),200,-2,2);
 					for(int l=0; l<n_runs; l++)
 					{
 						HoffR[j][l][i][k] = new TH1F((string("Hoff_run")+to_string(l)+string("_")+to_string(i)+string("_")+to_string(k)).data(),
-										(string("Offset_")+to_string(i)+string("_")+to_string(k)+string(";Offset Value;Counts")).data(),180,-2.1,2.1);
+										(string("Offset_")+to_string(i)+string("_")+to_string(k)+string(";Offset Value;Counts")).data(),200,-2,2);
 					}
 				}
 
@@ -438,23 +448,33 @@ void Simulation_runner()
 		HmapRPm->Draw("COLZ");
 		cMap_2->SaveAs("RPmap.pdf","pdf");
 		HmapRPm->SaveAs("HmapRP.root","root");
+		
+		TH2F* HmapThPm = merge(HmapThP);
+		TCanvas* cMap_3 = new TCanvas("cMap_3", "Theta-Phi Distribution", 1000, 1000);
+		HmapThPm->Draw("COLZ");
+		cMap_3->SaveAs("ThPmap.pdf","pdf");
+		HmapThPm->SaveAs("HmapThP.root","root");
 
 		if(plot_slices)
 		{
-			TH1F* HRam = merge(HRa),* HPhm = merge(HPh);
+			TH1F* HRam = merge(HRa),* HPhm = merge(HPh), * HThm = merge (HTh);
 			TCanvas* cSlicePh = new TCanvas("cSlicePh", "Phi Distribution", 1000, 1000);
 			HPhm->Draw();
 			cSlicePh->SaveAs("Slices.pdf(","pdf");
 			HPhm->SaveAs("HPh.root","root");
 			TCanvas* cSliceR = new TCanvas("cSliceR", "R Distribution", 1000, 1000);
 			HRam->Draw();
-			cSliceR->SaveAs("Slices.pdf)","pdf");
+			cSliceR->SaveAs("Slices.pdf","pdf");
 			HRam->SaveAs("HRa.root","root");
+			TCanvas* cSliceTh = new TCanvas("cSliceTh", "Theta Distribution", 1000, 1000);
+			HThm->Draw();
+			cSliceTh->SaveAs("Slices.pdf)","pdf");
+			HThm->SaveAs("HTh.root","root");
 	
-			array<TH1F*,n_runs> HRaRm = merge(HRaR), HPhRm = merge(HPhR);
+			array<TH1F*,n_runs> HRaRm = merge(HRaR), HPhRm = merge(HPhR), HThRm = merge(HThR);
 			TCanvas* cSlicePhR	= new TCanvas("cSlicePhR", "Phi Distribution per Run", 1000, 1000);
 			TFile fPhR("HPhR.root","RECREATE");
-			cSlicePhR.cd()
+			cSlicePhR->cd();
 			for (int j=0;j<n_runs;j++)
 			{
 				HPhRm[j]->Draw();
@@ -462,14 +482,24 @@ void Simulation_runner()
 				HPhRm[j]->Write();
 			}
 			fPhR.Close();
+			TCanvas* cSliceThR	= new TCanvas("cSliceThR", "Theta Distribution per Run", 1000, 1000);
+			TFile fThR("HThR.root","RECREATE");
+			cSliceThR->cd();
+			for (int j=0;j<n_runs;j++)
+			{
+				HThRm[j]->Draw();
+				cSliceThR->SaveAs((string("Theta_Slices_run.pdf") + string(j==0 ? "(" : "") + string(j==(n_runs-1) ? ")" : "")).data(),"pdf");
+				HThRm[j]->Write();
+			}
+			fThR.Close();
 			TCanvas* cSliceRR 	= new TCanvas("cSliceRR", "R Distribution per Run", 1000, 1000);
 			TFile fRR("HRR.root","RECREATE");
-			cSliceRR.cd()
+			cSliceRR->cd();
 			for (int j=0;j<n_runs;j++)
 			{
 				HRaRm[j]->Draw();
 				cSliceRR->SaveAs((string("R_Slices_run.pdf") + string(j==0 ? "(" : "") + string(j==(n_runs-1) ? ")" : "")).data(),"pdf");
-				HRaRm[j]->SaveAs("HRa.root","root");
+				HRaRm[j]->SaveAs("HRR.root","root");
 			}
 			fRR.Close();
 		}
