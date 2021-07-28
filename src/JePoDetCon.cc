@@ -92,10 +92,10 @@ void JePoDetCon::DefineDimensions()
   	//trL = 300.0 * mm;
  	trL = 7 * trB;
  	AlT =  0.01 * mm;
-	//holX = 90.0 * mm;
-	//holY = 90.0 * mm;
-	holX = 0.01 * mm;
-	holY = 0.01 * mm;
+	holX = 90.0 * mm;
+	holY = 90.0 * mm;
+	//holX = 0.01 * mm;
+	//holY = 0.01 * mm;
 	layT = 2.0 * mm;
 
 	// Configuration for B0 volume

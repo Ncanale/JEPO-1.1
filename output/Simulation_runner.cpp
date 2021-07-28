@@ -12,17 +12,17 @@
 
 //comment this section if ROOT is installed from source
 
-// #include <root/TCanvas.h>
-// #include <root/TChain.h>
-// #include <root/TH1.h>
-// #include <root/TLeaf.h>
-// #include <root/TH2.h>
-// #include <root/TThread.h>
-// #include <root/TROOT.h>
-// #include <root/TRandom3.h>
-// #include <root/TFile.h>
-// #include <root/TError.h>
-// #include <root/TLatex.h>
+#include <root/TCanvas.h>
+#include <root/TChain.h>
+#include <root/TH1.h>
+#include <root/TLeaf.h>
+#include <root/TH2.h>
+#include <root/TThread.h>
+#include <root/TROOT.h>
+#include <root/TRandom3.h>
+#include <root/TFile.h>
+#include <root/TError.h>
+#include <root/TLatex.h>
 
 
 #define PERPENDICULAR 0
@@ -47,8 +47,8 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; 										// total number of layer modules
-const int n_runs = 7;									// number of runs -> radii, translations, etc
-const int nth = 6; 										// number of threads (also to expect from file names)
+const int n_runs = 15;								// number of runs -> radii, translations, etc
+const int nth = 8; 										// number of threads (also to expect from file names)
 const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
 const int Tn = CN/2; 									// number of front facing modules
 const Double_t Tb = 6; 								// tracker module base in cm
@@ -72,7 +72,7 @@ array<array<Double_t,CN>,nth> F, B;
 array<array<array<Double_t,CN>,CN>,nth> etaF, etaB;
 
 array<TChain*,nth> t;
-array<array<TChain*,n_runs>,nth> tR;
+array<array<TChain*,n_runs>,nth> trn;
 
 TRandom3 tr;
 
@@ -99,20 +99,20 @@ void* SR_func(void* ptr)
 	cout<<"Running Thread: "<<M[0]<<endl;
 	for(auto i=M[1]; i<M[2]; i++)
 	{
-		tR[M[0]][M[3]]->GetEntry(i);
+		trn[M[0]][M[3]]->GetEntry(i);
 
 		if(plot_generator)
 		{
-			gunX[M[0]] = tR[M[0]][M[3]]->GetLeaf("position_X")->GetTypedValue<float>();
-			gunY[M[0]] = tR[M[0]][M[3]]->GetLeaf("position_Y")->GetTypedValue<float>();
-			gunTh[M[0]] = tR[M[0]][M[3]]->GetLeaf("theta_lab")->GetTypedValue<float>();
-			gunPh[M[0]] = tR[M[0]][M[3]]->GetLeaf("phi_lab")->GetTypedValue<float>();
+			gunX[M[0]] = trn[M[0]][M[3]]->GetLeaf("position_X")->GetTypedValue<float>();
+			gunY[M[0]] = trn[M[0]][M[3]]->GetLeaf("position_Y")->GetTypedValue<float>();
+			gunTh[M[0]] = trn[M[0]][M[3]]->GetLeaf("theta_lab")->GetTypedValue<float>();
+			gunPh[M[0]] = trn[M[0]][M[3]]->GetLeaf("phi_lab")->GetTypedValue<float>();
 		}
 
 		for(int j=0; j<CN; j++)
 		{
-			F[M[0]][j] = tR[M[0]][M[3]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
-			B[M[0]][j] = tR[M[0]][M[3]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
+			F[M[0]][j] = trn[M[0]][M[3]]->GetLeaf(nameF[j].data())->GetTypedValue<float>();
+			B[M[0]][j] = trn[M[0]][M[3]]->GetLeaf(nameB[j].data())->GetTypedValue<float>();
 			if(plot_signals)
 			{
 				Hf[M[0]][j]->Fill(F[M[0]][j]);
@@ -355,7 +355,7 @@ void Simulation_runner()
 	for(int i=0; i<nth; i++)
 	{
 		t[i] = new TChain("hits");
-		for(int j=0; j<n_runs; j++) tR[i][j] = new TChain("hits");
+		for(int j=0; j<n_runs; j++) trn[i][j] = new TChain("hits");
 	}
 	stringstream ss;
 	for(int i=0; i<n_runs; i++)
@@ -368,12 +368,12 @@ void Simulation_runner()
 			for(int k=0; k<nth; k++)
 			{
 				t[k]->Add(ss.str().data());
-				tR[k][i]->Add(ss.str().data());
+				trn[k][i]->Add(ss.str().data());
 			}
 		}
 	}
 	N = t[0]->GetEntries();
-	for(int i=0; i<n_runs; i++) NR[i] = tR[0][i]->GetEntries();
+	for(int i=0; i<n_runs; i++) NR[i] = trn[0][i]->GetEntries();
 	cout<<"Number of events in the tree: "<<N<<endl;
 
 	init_vars();
