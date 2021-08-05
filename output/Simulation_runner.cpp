@@ -10,8 +10,7 @@
 #include <tuple>
 
 
-//comment this section if ROOT is installed from source
-
+//comment this section... 
 #include <root/TCanvas.h>
 #include <root/TChain.h>
 #include <root/TH1.h>
@@ -23,7 +22,7 @@
 #include <root/TFile.h>
 #include <root/TError.h>
 #include <root/TLatex.h>
-
+//... if ROOT is installed from source
 
 #define PERPENDICULAR 0
 #define PARALLEL 1
@@ -60,16 +59,18 @@ array<Long64_t,n_runs> NR;
 array<TH2F*,nth> HmapXY,HmapRP,HmapThP,HmapGXY,HmapGRP;
 array<TH1F*,nth> HRa, HPh, HTh;
 array<array<TH1F*,n_runs>,nth> HRaR, HPhR, HThR;
+
 array<array<TH1F*,CN>,nth> Hf, Hb;
 array<array<array<TH1F*,CN>,CN>,nth> HetaF, HetaB, Hoff;
 array<array<array<array<TH1F*,CN>,CN>,n_runs>,nth> HoffR;
 array<array<array<TH2F*,CN>,CN>,nth> HratioF, HratioB;
+array<array<array<Double_t,CN>,CN>,nth> etaF, etaB;
+array<array<Double_t,CN>,nth> F, B;
 
 array<string,CN> nameF, nameB;
 
 array<Double_t,nth> gunX, gunY, gunTh, gunPh;
-array<array<Double_t,CN>,nth> F, B;
-array<array<array<Double_t,CN>,CN>,nth> etaF, etaB;
+
 
 array<TChain*,nth> t;
 array<array<TChain*,n_runs>,nth> trn;
