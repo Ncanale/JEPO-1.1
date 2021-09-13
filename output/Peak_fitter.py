@@ -25,11 +25,15 @@ elif configuration == "PERPENDICULAR":
     if setting == "THETA":
         names = ['HTh']
         path_names = ['HTh.root']
+        canvas_titles =['Theta scan']
     elif setting == "PHI":
         names = ['HPh']
         path_names = ['HPH.root']
+        canvas_titles =['Phi scan']
     else:
         input ("CHECK SETTINGS!")
+    canvas_names = ['can']
+
 else:
     input ("CHECK THE CONFIGURATIONS")
 
@@ -89,7 +93,7 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     total_fit_func = rt.TF1('total_fit_funct',fit_string,-1.6,0.7)
     
     TB_peak_dist = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
-    # TB_Y_max = [334,1100,1550,1625,1458,1050,468]
+    TB_Y_max = [334,1100,1550,1625,1458,1050,468]
 
 
 

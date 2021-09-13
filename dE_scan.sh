@@ -16,8 +16,8 @@ rm -r *.bak
 rm -r residual_*
 
 # for i in "${my_array[@]}"; do echo "$i"; done
-root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
-sed -i .bak "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
+# root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
+# sed -i .bak "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
 
 for j in "${my_array2[@]}"
 do
@@ -33,7 +33,7 @@ do
     done   
 
 cd output
-python3 dE_residual_plotter.py
+# python3 dE_residual_plotter.py
 cd ..
 
 done
