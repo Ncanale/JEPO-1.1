@@ -12,14 +12,14 @@ energy=270
 file_name="${particle}${target}-${energy}MeV"
 
 #detector properties
-configuration=PARALLEL          #in all caps
-# configuration=PERPENDICULAR     #in all caps
-angle=PHI                       #in all caps
-# angle=THETA                     #in all caps
+# configuration=PARALLEL          #in all caps
+configuration=PERPENDICULAR     #in all caps
+# angle=PHI                       #in all caps
+angle=THETA                     #in all caps
 
 # smearing=0.193
 # smearing=0.0
-smearing=0.23
+smearing=0.220
 
 rm -r output/*.bak
 rm -r output/${particle}*-*
@@ -40,14 +40,13 @@ sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" outp
 sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" output/Simulation_runner.cpp
 sed -i .bak "s+^string Target.*+string Target = \"$target\";+" output/Simulation_runner.cpp
 
-sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
-# sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
+
+sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
 sed -i .bak "s/^Target.*/Target = \"$target\"/" output/Peak_fitter.py
 sed -i .bak "s/^Energy.*/Energy = $energy/" output/Peak_fitter.py
 sed -i .bak "s/^Smearing.*/Smearing = $smearing/" output/Peak_fitter.py
-sed -i .bak "s/^Smearing.*/Smearing = $smearing/" output/Peak_fitter_2.py
+# sed -i .bak "s/^Smearing.*/Smearing = $smearing/" output/Peak_fitter_2.py
 sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
-sed -i .bak "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
 
 sed -i .bak "s/^NTHREADS.*/NTHREADS		    $n_cores/" config.cfg
 sed -i .bak "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
@@ -64,15 +63,18 @@ fi
 
 if [[ "$configuration" == "PARALLEL" ]]
 then
-  sed -i .bak "s/^setting=.*/setting='G4'/" output/Peak_fitter_2.py
-  root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
-  sed -i .bak "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
+  sed -i .bak "s/^setting=.*/setting='G4'/" output/Peak_fitter.py
+  # root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
+  # sed -i .bak "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
 elif [[ "$configuration" == "PERPENDICULAR" ]]
 then
+  sed -i .bak "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
   sed -i .bak "s/G4String angle=.*/G4String angle=\"$angle\";/" ../JEPO-1.1/src/BT2017PriGenAct.cc
+  sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
 fi
 
-make clean
+sleep 1
+# make clean
 make -j6
 
 # subtracted=(0.1  5 10 15 20 25 29.9)
@@ -97,15 +99,15 @@ do
       sed -i .bak "s/MAXTHETA.*/MAXTHETA                ${phi_array[$i]}/" config.cfg
     elif [[ "$angle" == "THETA" ]]
     then
-      sed -i .bak "s/MINTHETA.*/MINTHETA                $((0 + (2*$i))).0/" config.cfg
-      sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((0 + (2*$i))).0/" config.cfg
+      sed -i .bak "s/MINTHETA.*/MINTHETA                $((5 + (2*$i))).0/" config.cfg
+      sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((5 + (2*$i))).0/" config.cfg
     else 
       echo -e "CHECK ANGLE!!!"
     fi
   else 
     echo -e "CHECK CONFIGURATION!!!"
   fi
-
+  sleep 1 
   ./jepo -m n_event.mac
 
   for (( j=0; j<$n_cores; j++ ))
@@ -140,7 +142,7 @@ cd output
 root -q -l Simulation_runner.cpp
 if [[ "$configuration" == "PARALLEL" ]]
 then
-    python3 Peak_fitter_2.py
+    python3 Peak_fitter.py
     # python3 Offset_plotter.py 
 fi
 if [[ "$configuration" == "PERPENDICULAR" ]]

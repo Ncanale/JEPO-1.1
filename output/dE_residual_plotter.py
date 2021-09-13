@@ -115,12 +115,14 @@ ref1 = make_graph(2,ref1_x,ref1_y,"dE_scan","dE","Residual Par1")
 
 zero = []
 for zeros in smearing_id : zero.append(0)
-grchi = make_graph_error(len(smearing_id),smearing_id,Chi_reduced,Esmearing_id,zero,"dE_Scan","dE","Residual CHI/NDF")
-grchiZoom = make_graph_error(len(smearing_id),smearing_id,Chi_reduced,Esmearing_id,zero,"dE_Scan","dE","Residual CHI/NDF")
+grchi = make_graph_error(len(smearing_id),smearing_id,Chi_reduced,Esmearing_id,zero,"dE_Scan","dE","Residual - \chi^{2}/NDF")
+grchiZoom = make_graph_error(len(smearing_id),smearing_id,Chi_reduced,Esmearing_id,zero,"dE_Scan","dE","Residual - \chi^{2}/NDF")
 refchi_y=[1.0,1.0]
 refchi_x=[min(smearing_id),max(smearing_id)]
 # print ("rX ", refchi_x, ", rY ", refchi_y)
-refchi = make_graph(2,refchi_x,refchi_y,"dE_scan","dE","Residual Parchi")
+refchi = make_graph(2,refchi_x,refchi_y,"dE_scan","dE","Residual \Chi")
+
+
 
 
 can=rt.TCanvas('can','dE_Resiudal_scan',2880,1800)
@@ -142,25 +144,29 @@ grchi.Draw()
 refchi.SetLineColor(2)
 refchi.Draw('same')
 
+zoom_range_X =[0.21,0.23] 
 can.cd(4)
 gr0Zoom.Draw()
-gr0Zoom.GetXaxis().SetRangeUser(0.218,0.232)
-gr0Zoom.GetYaxis().SetRangeUser(0.96,1.04)
+gr0Zoom.GetXaxis().SetRangeUser(zoom_range_X[0],zoom_range_X[1])
+gr0Zoom.GetYaxis().SetRangeUser(0.9,1.12)
 ref0.SetLineColor(2)
 ref0.Draw('same')
 
 can.cd(5)
 gr1Zoom.Draw()
-gr1Zoom.GetXaxis().SetRangeUser(0.218,0.232)
+gr1Zoom.GetXaxis().SetRangeUser(zoom_range_X[0],zoom_range_X[1])
 gr1Zoom.GetYaxis().SetRangeUser(-0.02,0.02)
 ref1.SetLineColor(2)
 ref1.Draw('same')
 
 can.cd(6)
 grchiZoom.Draw()
-grchiZoom.GetXaxis().SetRangeUser(0.15,0.3)
-# grchiZoom.GetYaxis().SetRangeUser(-0.02,0.02)
+grchiZoom.GetXaxis().SetRangeUser(zoom_range_X[0],zoom_range_X[1])
+grchiZoom.GetYaxis().SetRangeUser(-0.02,25)
 refchi.SetLineColor(2)
 refchi.Draw('same')
+
+can.SaveAs('dE_scan.root','root')
+can.SaveAs('dE_scan.pdf','pdf')
 
 input ('press a key to exit')

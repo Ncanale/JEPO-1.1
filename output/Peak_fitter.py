@@ -5,7 +5,7 @@ import time
 
 
 configuration = "PARALLEL"
-setting='TB'
+setting = "TB"
 plot_offsets = True
 
 if configuration == "PARALLEL":
@@ -21,6 +21,15 @@ if configuration == "PARALLEL":
 
     canvas_names = ['can']
     canvas_titles =['Offset']
+elif configuration == "PERPENDICULAR":
+    if setting == "THETA":
+        names = ['HTh']
+        path_names = ['HTh.root']
+    elif setting == "PHI":
+        names = ['HPh']
+        path_names = ['HPH.root']
+    else:
+        input ("CHECK SETTINGS!")
 else:
     input ("CHECK THE CONFIGURATIONS")
 
@@ -29,8 +38,8 @@ n_runs      = 7
 
 
 Target= "Empty"
-Smearing=0.225
-Energy=270
+Smearing=300
+Energy=100
 
 sigmas = []
 sigmas_errors = []
@@ -47,7 +56,14 @@ def root_sum_square(vector_error,calibration):
     # print ('sqrt quad ', quadratic_sum,' cm')
     return (quadratic_sum)
 
-def peak_fitter(canvas,hist,rebin_value,n_runs):
+def find_the_values(hist_root_name):
+    hist_entries = hist_root_name.GetEntries()
+    hist_max = hist_root_name.GetMaximum()
+    hist_mean = hist_root_name.GetMean()
+    hist_std = hist_root_name.GetStdDev()
+    return(hist_entries, hist_max, hist_mean, hist_std)
+
+def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     canvas.cd()
     hist.Draw()
     hist.Rebin(rebin_value)
@@ -70,18 +86,20 @@ def peak_fitter(canvas,hist,rebin_value,n_runs):
         # print (fit_string)
 
     # print('\n fit_string = ', fit_string)
-    total_fit_func = rt.TF1('total_fit_funct',fit_string,-1.7,0.8)
+    total_fit_func = rt.TF1('total_fit_funct',fit_string,-1.6,0.7)
     
     TB_peak_dist = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
-    TB_Amplitudes = [334,974,1500,1625,1458,1050,468]
+    # TB_Y_max = [334,1100,1550,1625,1458,1050,468]
+
+
+
 
     for j in range(n_runs): 
-        # total_fit_func.SetParameter((j*3),(hist.GetEntriess()/n_runs))
-        total_fit_func.SetParameter((j*3),TB_Amplitudes[j]/(m.sqrt(2*m.pi)*0.1)) #REAL 
-        # total_fit_func.SetParameter((j*3)+1, -1.5 + j*0.4) #G4 
-        total_fit_func.SetParameter((j*3)+1, TB_peak_dist[j]) #REAL
+        print ('Set Parameter(',j*3 +1,') : ',TB_peak_dist[j])
+        total_fit_func.SetParameter((j*3),TB_Y_max[j]/(m.sqrt(2*m.pi)*0.1)) #REAL 
+        total_fit_func.SetParameter((j*3)+1, TB_peak_dist[j]) 
         total_fit_func.SetParameter((j*3)+2, 0.1)
-    hist.Fit(total_fit_func,'','',-1.7,0.8)
+    hist.Fit(total_fit_func,'','',-1.55,0.7)
     print('CHI/NDF of GAUSSIAN FIT: ',(total_fit_func.GetChisquare()/total_fit_func.GetNDF()),', Prob ', total_fit_func.GetProb())
     for j in range(n_runs): 
         amplitude.append(total_fit_func.GetParameter((j*3))/hist.GetEntries())
@@ -91,10 +109,11 @@ def peak_fitter(canvas,hist,rebin_value,n_runs):
         sigma.append(total_fit_func.GetParameter((j*3)+2))
         sigma_error.append(total_fit_func.GetParError((j*3)+2))
         func_name = 'funct_'+str(j)
-        Gauss[j] = rt.TF1(func_name,'[0]*exp(-0.5*((x-[1])/[2])**2)',-1.7,0.8)
+        Gauss[j] = rt.TF1(func_name,'[0]*exp(-0.5*((x-[1])/[2])**2)',-1.6,0.8)
         Gauss[j].SetParameters(total_fit_func.GetParameter(j*3),mean[j],sigma[j])
-        Gauss[j].SetLineColor(j+1)
-        Gauss[j].Draw('same')
+        if setting == 'G4':
+            Gauss[j].SetLineColor(j+1)
+            Gauss[j].Draw('same')
     canvas.SaveAs('Test.pdf','pdf')
 
     # # # Calibration # #
@@ -114,11 +133,11 @@ def peak_fitter(canvas,hist,rebin_value,n_runs):
         sigma_calbirated.append(sigmas*calib_parameter)
     for error in sigma_error :
         sigma_calbirated_error.append(error*calib_parameter)
-    print ('amplitudes ', amplitude)
-    print ('means \t', mean)
+    print ('amplitudes \t', amplitude)
+    print ('means \t\t', mean)
     print ('expected means \t', TB_peak_dist)
     print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
-    print ('AVERAGE sigma : ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' mm')
+    print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' mm')
 
     return(amplitude,amplitude_error,mean,mean_error,sigma,sigma_error,sigma_calbirated,sigma_calbirated_error,calib_parameter)
 
@@ -129,7 +148,29 @@ for i in range (0,len(names)):
     print (path_name)
     f = rt.TFile.Open(path_name)
     canvas = rt.TCanvas(canvas_names[i],canvas_titles[i],2880,1800)
-    result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs)
+    hist_entries    = []
+    hist_max        = []
+    hist_mean       = []
+    hist_std        = [] 
+    for k in range(0,n_runs) :
+        if setting == "G4":
+            name = 'Hoff_run'+str(k)+'_3_11'   
+            # hist = rt.TH1D()
+            hist = f.Get(name)
+            values = find_the_values(hist)
+            hist_entries.append(values[0])
+            hist_max.append(values[1])
+            if k == 0:
+                hist_mean.append(-1.39) ##first peak is covered by background, so we should not trust that value 
+            else:
+                hist_mean.append(values[2])
+            hist_std.append(values[3])
+        elif setting == "TB":
+            hist_mean = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
+            hist_max = [334,1100,1550,1625,1458,1050,468]
+
+    print ('entries: ',hist_entries, ',\nmax: ', hist_max,',\nmean: ', hist_mean,',\nstd: ', hist_std)
+    result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs,hist_mean,hist_max)
 
     
     print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' mm')  
@@ -140,10 +181,11 @@ for i in range (0,len(names)):
     for j in range(len(position_calibrated)-1):
         diff.append(position_calibrated[j+1]-position_calibrated[j])
     print('peak dist ', diff ,' mm')
+    print('AVERAGE peak distance ', np.mean(diff),' mm')
     # input('press a key REMEMBER TO COPY AMPLITUDE LINE ON OFFSET PLOTTER! ')
     # input('continue')
     f.Close()
-    if plot_offsets:
+    if plot_offsets and setting == "G4":
         ypeak_TB    = [0.004089111858736201, 0.01132391844284614, 0.018024870023480702, 0.019738905525656134, 0.01830219717921987, 0.014120613115354088, 0.005270570607197707]
         print('amplitudes ', result[0])
         Y_g4_hist   = result[0]
@@ -176,9 +218,10 @@ for i in range (0,len(names)):
         for k in range (n_runs): h2_run_buffer[k] = h2_run[k].Clone()
         h1_entries = int(h1.GetEntries())
         h2_entries = int(h2.GetEntries())
+        h1_bins = int(h1.GetNbinsX())
         h2_bins = int(h2.GetNbinsX())
         print('h1_entries: ', h1_entries,' -  h2_entries:', h2_entries)
-        print ("h2 bins",h2_bins )
+        print ('h1_bins: ', h1_bins,'- h2 bins',h2_bins )
         for k in range(0,h2_bins):
             num = h2.GetBinContent(k)   
             h2_buffer.SetBinContent(k,num*(h1_entries/h2_entries))     
@@ -219,7 +262,23 @@ for i in range (0,len(names)):
         c3.Update()
         c3.SaveAs('residual_plot_'+str(Smearing)+'.pdf','pdf')
         c3.SaveAs('residual_plot_'+str(Smearing)+'.root','root')
-        string = 'Smearing: ' + str(Smearing) +', Par 0: ' + str(funct.GetParameter(0)) + ', Par1: ' + str(funct.GetParameter(1)) + ', EPar 0: ' + str(funct.GetParError(0)) +', EPar 1: ' + str(funct.GetParError(1)) + ', CHI: '+ str(funct.GetChisquare()) + ', NDF: ' + str(funct.GetNDF()) +'\n'
+        print ('hSum bins: ', int(hSum.GetNbinsX()))
+        if (int(h1.GetNbinsX()) == int(hSum.GetNbinsX())):    
+            Chi_hist = 0
+            bin_min = 25
+            bin_max = 130
+            for o in range(bin_min,bin_max):
+                TB_bin_value = h1.GetBinContent(o)
+                G4_bin_value = hSum.GetBinContent(o)
+                if TB_bin_value != 0:
+                    Chi_hist += ((G4_bin_value-TB_bin_value)*(G4_bin_value-TB_bin_value)/(TB_bin_value))
+                else:
+                    print (o,') TB_bin_value :', TB_bin_value)
+        else:
+            input ('DIFFERENT BIN NUM')        
+        print ('Chi_hist ', Chi_hist)
+        # string = 'Smearing: ' + str(Smearing) +', Par 0: ' + str(funct.GetParameter(0)) + ', Par1: ' + str(funct.GetParameter(1)) + ', EPar 0: ' + str(funct.GetParError(0)) +', EPar 1: ' + str(funct.GetParError(1)) + ', CHI: '+ str(funct.GetChisquare()) + ', NDF: ' + str(funct.GetNDF()) +'\n'
+        string = 'Smearing: ' + str(Smearing) +', Par 0: ' + str(funct.GetParameter(0)) + ', Par1: ' + str(funct.GetParameter(1)) + ', EPar 0: ' + str(funct.GetParError(0)) +', EPar 1: ' + str(funct.GetParError(1)) + ', CHI: '+ str(Chi_hist) + ', NDF: ' + str(bin_max - bin_min -21) +'\n'
         print(string)
 
         # ratio_scale =[]

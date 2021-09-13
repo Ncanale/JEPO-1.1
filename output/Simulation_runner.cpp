@@ -206,17 +206,17 @@ void init_vars()
 	{
 		if(plot_map) HmapXY[i] = new TH2F("HmapXY", "X-Y Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_map) HmapRP[i] = new TH2F("HmapRP", "R-#phi Map;#phi;R",500,-4,4,500,0,21);
-		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",500,-4,4,510,-0.01,0.5);
+		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",500,-4,4,500,0,25);
 		if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
 		if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
 		if(plot_slices) HPh[i] = new TH1F("HPh", "#phi Distribution;#phi;Counts",3000,-4,4);
-		if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",510,-0.01,0.5);
+		if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",500,0,25);
 		for(int j=0; j<n_runs; j++)
 		{
 			if(plot_slices) HRaR[i][j] = new TH1F((string("HRaR_")+to_string(j)).data(), "Radius Distribution per Run;R;Counts",3000,0,21);
 			if(plot_slices) HPhR[i][j] = new TH1F((string("HPhR_")+to_string(j)).data(), "#phi Distribution per Run;#phi;Counts",3000,-4,4);
-			if(plot_slices) HThR[i][j] = new TH1F((string("HThR_")+to_string(j)).data(), "#theta Distribution per Run;#phi;Counts",510,-0.01,0.5);
+			if(plot_slices) HThR[i][j] = new TH1F((string("HThR_")+to_string(j)).data(), "#theta Distribution per Run;#phi;Counts",500,0,25);
 		}
 	}
 	for(int i=0; i<CN; i++)
@@ -248,10 +248,10 @@ void init_vars()
 				{
 					HratioF[j][i][k] = new TH2F((string("HF_")+to_string(i)+string("_")+to_string(k)).data(),
 					        (string("F_")+to_string(i)+string("_")+to_string(k)+string("_ratio;F_")+to_string(i)+string("; F_")+to_string(k)).data(),
-					        200,0.3,30,200,0.3,30);
+					        100,0.3,30,100,0.3,30);
 					HratioB[j][i][k] = new TH2F((string("HB_")+to_string(i)+string("_")+to_string(k)).data(),
 					        (string("B_")+to_string(i)+string("_")+to_string(k)+string("_ratio;B_")+to_string(i)+string("; B_")+to_string(k)).data(),
-					        200,0.3,30,200,0.3,30);
+					        100,0.3,30,100,0.3,30);
 				}
 			}
 		}
@@ -552,8 +552,12 @@ void Simulation_runner()
 			tie(a,b,ignore) = *it;
 			cEta->cd(1);
 			HetaFm[a][b]->Draw();
+			HetaFm[a][b]->SaveAs("G4_Eta_F.root","root");
+			HetaFm[a][b]->SaveAs("G4_Eta_F.pdf","pdf");
 			cEta->cd(2);
 			HetaBm[a][b]->Draw();
+			HetaBm[a][b]->SaveAs("G4_eta_B.root","root");
+			HetaBm[a][b]->SaveAs("G4_eta_B.pdf","pdf");
 			cEta->cd(3);
 			Hoffm[a][b]->Draw();
 			Hoffm[a][b]->Write();
