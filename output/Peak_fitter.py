@@ -5,8 +5,9 @@ import time
 
 
 configuration = "PERPENDICULAR"
-setting = "TB"
-plot_offsets = True
+setting = "THETA"
+plot_offsets = False
+residuals = False
 
 if configuration == "PARALLEL":
     if setting == "G4":
@@ -94,16 +95,50 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     
     TB_peak_dist = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
     TB_Y_max = [334,1100,1550,1625,1458,1050,468]
+    phi_array= [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 202.5, 225.0, 247.5, 270.0, 292.5, 315.0, 337.5]
+    theta_array = []
 
-
-
+    theta_start = 5 
+    theta_step = 2
+    theta_step2= theta_step*1.1 
 
     for j in range(n_runs): 
-        print ('Set Parameter(',j*3 +1,') : ',TB_peak_dist[j])
-        total_fit_func.SetParameter((j*3),TB_Y_max[j]/(m.sqrt(2*m.pi)*0.1)) #REAL 
-        total_fit_func.SetParameter((j*3)+1, TB_peak_dist[j]) 
-        total_fit_func.SetParameter((j*3)+2, 0.1)
-    hist.Fit(total_fit_func,'','',-1.55,0.7)
+        if configuration == "PARALLEL":
+            total_fit_func.SetParameter((j*3),TB_Y_max[j]/(m.sqrt(2*m.pi)*0.1)) #REAL 
+            print ('Set Parameter(',j*3,') \t: \t',TB_Y_max[j]/(m.sqrt(2*m.pi)*0.1))
+            total_fit_func.SetParameter((j*3)+1, TB_peak_dist[j]) 
+            print ('Set Parameter(',(j*3) +1,') \t: \t',TB_peak_dist[j])
+            total_fit_func.SetParameter((j*3)+2, 0.1)
+            print ('Set Parameter(',(j*3)+2,') \t: \t',0.1)
+            fit_range = [-1.55,0.7]
+        elif configuration == "PERPENDICULAR":
+            if setting == "PHI":
+                total_fit_func.SetParameter((j*3),hist.GetMaximum()/2)  
+                print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()/2)
+                total_fit_func.SetParameter((j*3)+1, phi_array[j] ) 
+                print ('Set Parameter(',(j*3) +1,') \t: \t', phi_array[j])
+                total_fit_func.SetParameter((j*3)+2,1)  
+                print ('Set Parameter(',(j*3)+2,') \t: \t',0.1)
+                # total_fit_func.SetParameter((j*3)+2, 0.1)
+                fit_range = [min(phi_array)-1,max(phi_array)+1]
+                hist.Fit(total_fit_func,'','',)
+            elif setting == "THETA":
+                theta_array.append(theta_start + (theta_step
+                *j))
+                print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()*2/3)
+                total_fit_func.SetParameter((j*3),hist.GetMaximum()*2/3)  
+                print ('Set Parameter(',(j*3) +1,') \t: \t', (theta_start + (theta_step2*j)))
+                total_fit_func.SetParameter((j*3)+1, theta_start  + (theta_step2*j) ) 
+                print ('Set Parameter(',(j*3) +2,') \t: \t',0.5)
+                total_fit_func.SetParameter((j*3)+2,0.5)  
+                fit_range = [theta_start-1,theta_start + (theta_step2*n_runs)+1]
+                
+    hist.Fit(total_fit_func,'','',fit_range[0],fit_range[1])
+
+
+           
+
+
     print('CHI/NDF of GAUSSIAN FIT: ',(total_fit_func.GetChisquare()/total_fit_func.GetNDF()),', Prob ', total_fit_func.GetProb())
     for j in range(n_runs): 
         amplitude.append(total_fit_func.GetParameter((j*3))/hist.GetEntries())
@@ -120,18 +155,25 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
             Gauss[j].Draw('same')
     canvas.SaveAs('Test.pdf','pdf')
 
-    # # # Calibration # #
-    sigma_calbirated= []
-    sigma_calbirated_error= []
-    calibration_edges =[0.24739106414386924, 28.93078785640231]
-    # if setting == 'G4':     calibration_edges =[0.1, 29.711556917623575]
-    # elif setting == 'TB':   calibration_edges =[0.1, 29.9]
+    if configuration == "PARALLEL":
+        # # # Calibration # #
+        sigma_calbirated= []
+        sigma_calbirated_error= []
+        calibration_edges =[0.24739106414386924, 28.93078785640231]
+        # if setting == 'G4':     calibration_edges =[0.1, 29.711556917623575]
+        # elif setting == 'TB':   calibration_edges =[0.1, 29.9]
 
-    Dx  = (mean[-1] - mean[0])
-    print('peak -1 ', mean[-1] ,' peak 0 ', mean[0],'; diff',Dx )
-    distance = (calibration_edges[1]-calibration_edges[0])/1
-    calib_parameter = distance/Dx
-    print ('CALIBRATION PARAMETER = ', calib_parameter,' mm/offset ')
+        Dx  = (mean[-1] - mean[0])
+        print('peak -1 ', mean[-1] ,' peak 0 ', mean[0],'; diff',Dx )
+        distance = (calibration_edges[1]-calibration_edges[0])/1
+        calib_parameter = distance/Dx
+        print ('CALIBRATION PARAMETER = ', calib_parameter,' mm/offset ')
+    elif configuration == "PERPENDICULAR":
+        sigma_calbirated= []
+        sigma_calbirated_error= []
+        calib_parameter = 1
+        print ('CALIBRATION PARAMETER = ', calib_parameter,' deg/u.a. ')
+
 
     for sigmas in sigma : 
         sigma_calbirated.append(sigmas*calib_parameter)
@@ -139,13 +181,23 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
         sigma_calbirated_error.append(error*calib_parameter)
     print ('amplitudes \t', amplitude)
     print ('means \t\t', mean)
-    print ('expected means \t', TB_peak_dist)
-    print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
-    print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' mm')
+    if configuration == "PARALLEL":
+        print ('expected means \t', TB_peak_dist)
+        print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
+        print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' mm')
+    elif configuration == "PERPENDICULAR":
+        if setting == "PHI":
+            print ('expected means \t', phi_array )
+            print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
+            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' deg')
+        elif setting == "THETA":
+            print ('expected means \t', theta_array)
+            print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
+            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' deg')
 
     return(amplitude,amplitude_error,mean,mean_error,sigma,sigma_error,sigma_calbirated,sigma_calbirated_error,calib_parameter)
-
-f_s = open ("Residuals_scan.txt","a")
+if residuals == True : 
+    f_s = open ("Residuals_scan.txt","a")
 for i in range (0,len(names)):  
     position_calibrated = [] 
     path_name = path_names[i]# +'.root'
@@ -176,16 +228,23 @@ for i in range (0,len(names)):
     print ('entries: ',hist_entries, ',\nmax: ', hist_max,',\nmean: ', hist_mean,',\nstd: ', hist_std)
     result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs,hist_mean,hist_max)
 
-    
-    print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' mm')  
+    if configuration == "PARALLEL":
+        print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' mm')  
+    elif configuration == "PERPENDICULAR":
+        print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' deg') 
+
     calibration_parameter = result[-1]
     for mean in result[2]: position_calibrated.append(mean*calibration_parameter)
     print('Fitted position :',position_calibrated)
     diff = [] 
     for j in range(len(position_calibrated)-1):
         diff.append(position_calibrated[j+1]-position_calibrated[j])
-    print('peak dist ', diff ,' mm')
-    print('AVERAGE peak distance ', np.mean(diff),' mm')
+    if configuration == "PARALLEL":
+        print('peak dist ', diff ,' mm')
+        print('AVERAGE peak distance ', np.mean(diff),' mm')
+    elif configuration == "PERPENDICULAR":
+        print('peak dist ', diff ,' deg')
+        print('AVERAGE peak distance ', np.mean(diff),' deg')
     # input('press a key REMEMBER TO COPY AMPLITUDE LINE ON OFFSET PLOTTER! ')
     # input('continue')
     f.Close()
@@ -289,8 +348,10 @@ for i in range (0,len(names)):
         # for rat in ratio:
         #     ratio_scale.append(rat*(h1_entries/h2_entries))
         # print ('ratios \"scaled\"', ratio_scale)
-        f_s.write(string)
-f_s.close()
+        if residuals == True : 
+            f_s.write(string)
+if residuals == True : 
+    f_s.close()
 
 
 input('press a key')

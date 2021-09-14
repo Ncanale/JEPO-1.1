@@ -1,7 +1,7 @@
 #!/bin/zsh
 
 n_cores=6
-n_events=10000
+n_events=100000
 n_runs=7
 
 #beam properties
@@ -16,6 +16,9 @@ file_name="${particle}${target}-${energy}MeV"
 configuration=PERPENDICULAR     #in all caps
 # angle=PHI                       #in all caps
 angle=THETA                     #in all caps
+
+theta_start=5
+theta_step=2
 
 # smearing=0.193
 # smearing=0.0
@@ -68,9 +71,15 @@ then
   # sed -i .bak "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
 elif [[ "$configuration" == "PERPENDICULAR" ]]
 then
+  sed -i .bak "s/m_FlagBeamFile =.*/m_FlagBeamFile = 0;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
   sed -i .bak "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
   sed -i .bak "s/G4String angle=.*/G4String angle=\"$angle\";/" ../JEPO-1.1/src/BT2017PriGenAct.cc
   sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
+  if [[ "$angle" == "THETA" ]]
+  then 
+   sed -i .bak "s/^ theta_start =*/ theta_start  = $theta_start/" output/Peak_fitter.py
+   sed -i .bak "s/^ theta_step =*/ theta_step  = $theta_step/" output/Peak_fitter.py
+  fi 
 fi
 
 sleep 1
@@ -99,8 +108,8 @@ do
       sed -i .bak "s/MAXTHETA.*/MAXTHETA                ${phi_array[$i]}/" config.cfg
     elif [[ "$angle" == "THETA" ]]
     then
-      sed -i .bak "s/MINTHETA.*/MINTHETA                $((5 + (2*$i))).0/" config.cfg
-      sed -i .bak "s/MAXTHETA.*/MAXTHETA                $((5 + (2*$i))).0/" config.cfg
+      sed -i .bak "s/MINTHETA.*/MINTHETA                $(($theta_start + ($theta_step*$i))).0/" config.cfg
+      sed -i .bak "s/MAXTHETA.*/MAXTHETA                $(($theta_start + ($theta_step*$i))).0/" config.cfg
     else 
       echo -e "CHECK ANGLE!!!"
     fi
