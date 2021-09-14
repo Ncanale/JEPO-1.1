@@ -2,7 +2,7 @@
 
 n_cores=6
 n_events=100000
-n_runs=7
+n_runs=10
 
 #beam properties
 particle=deuteron
@@ -18,11 +18,12 @@ configuration=PERPENDICULAR     #in all caps
 angle=THETA                     #in all caps
 
 theta_start=5
-theta_step=2
+theta_step=1
 
-# smearing=0.193
-# smearing=0.0
 smearing=0.220
+
+PERPENDICULAR="1111111111111111111111111111"
+PARALLEL="0001000000110000010000001100"
 
 rm -r output/*.bak
 rm -r output/${particle}*-*
@@ -36,25 +37,11 @@ sed -i .bak "s/G4double Smear = .*/G4double Smear = $smearing;/" ../JEPO-1.1/src
 sed -i .bak "s+//comment this section...+//comment this section... \n/*+" output/Simulation_runner.cpp
 sed -i .bak "s+//... if ROOT is installed from source+*/\n//... if ROOT is installed from source+" output/Simulation_runner.cpp
 
-sed -i .bak "s/^const int n_runs.*/const int n_runs = $n_runs;/" output/Simulation_runner.cpp
-sed -i .bak "s/^const int nth.*/const int nth = $n_cores;/" output/Simulation_runner.cpp
-sed -i .bak "s/^int Energy.*/int Energy = $energy;/" output/Simulation_runner.cpp
-sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" output/Simulation_runner.cpp
-sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" output/Simulation_runner.cpp
-sed -i .bak "s+^string Target.*+string Target = \"$target\";+" output/Simulation_runner.cpp
-
-
-sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
-sed -i .bak "s/^Target.*/Target = \"$target\"/" output/Peak_fitter.py
-sed -i .bak "s/^Energy.*/Energy = $energy/" output/Peak_fitter.py
-sed -i .bak "s/^Smearing.*/Smearing = $smearing/" output/Peak_fitter.py
-# sed -i .bak "s/^Smearing.*/Smearing = $smearing/" output/Peak_fitter_2.py
-sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
-
 sed -i .bak "s/^NTHREADS.*/NTHREADS		    $n_cores/" config.cfg
 sed -i .bak "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
 sed -i .bak "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" config.cfg
 sed -i .bak "s/^TRACKERCONFIG.*/TRACKERCONFIG	$configuration/" config.cfg
+sed -i .bak "s/^TRACKERSETUP.*/TRACKERSETUP            ${!configuration}/" config.cfg
 
 sed -i .bak "s/USETARGET.*/USETARGET		    OFF/" config.cfg
 
@@ -63,6 +50,19 @@ then
     sed -i .bak "s/USETARGET.*/USETARGET		    ON/" config.cfg
     sed -i .bak "s/TARGETMATERIAL.*/TARGETMATERIAL		$target/" config.cfg
 fi
+
+sed -i .bak "s/^const int n_runs.*/const int n_runs = $n_runs;/" output/Simulation_runner.cpp
+sed -i .bak "s/^const int nth.*/const int nth = $n_cores;/" output/Simulation_runner.cpp
+sed -i .bak "s/^int Energy.*/int Energy = $energy;/" output/Simulation_runner.cpp
+sed -i .bak "s/^bool configuration.*/bool configuration = $configuration;/" output/Simulation_runner.cpp
+sed -i .bak "s+^string Particle.*+string Particle = \"$particle\";+" output/Simulation_runner.cpp
+sed -i .bak "s+^string Target.*+string Target = \"$target\";+" output/Simulation_runner.cpp
+
+sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs/" output/Peak_fitter.py
+sed -i .bak "s/^Target.*/Target = \"$target\"/" output/Peak_fitter.py
+sed -i .bak "s/^Energy.*/Energy = $energy/" output/Peak_fitter.py
+sed -i .bak "s/^Smearing.*/Smearing = $smearing/" output/Peak_fitter.py
+sed -i .bak "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
 
 if [[ "$configuration" == "PARALLEL" ]]
 then
@@ -77,8 +77,8 @@ then
   sed -i .bak "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
   if [[ "$angle" == "THETA" ]]
   then 
-   sed -i .bak "s/^ theta_start =*/ theta_start  = $theta_start/" output/Peak_fitter.py
-   sed -i .bak "s/^ theta_step =*/ theta_step  = $theta_step/" output/Peak_fitter.py
+   sed -i .bak "s/^theta_start = .*/theta_start = $theta_start/" output/Peak_fitter.py
+   sed -i .bak "s/^theta_step = .*/theta_step = $theta_step/" output/Peak_fitter.py
   fi 
 fi
 
@@ -91,7 +91,6 @@ subtracted=(0.24739106414386924 5.065845196500294 10.152798578987705 15.21887072
 
 # phi_array=(0 45 90 135 225 270 315)
 phi_array=(0.0 22.5 45.0 67.5 90.0 112.5 135.0 157.5 202.5 225.0 247.5 270.0 292.5 315.0 337.5) #15
-
 
 for (( i=0; i<$n_runs; i++ ))
 do
@@ -129,14 +128,6 @@ do
   echo -e "** ** ** ** ** Run $(($i + 1)) done ... ** ** ** ** ** "
 done
 
-# if [[ "$configuration" == "PARALLEL" ]]
-# then
-#   sed -i .bak "s/TRANSLATE.*/TRANSLATE              	0/" config.cfg
-# elif [[ "$configuration" == "PERPENDICULAR" ]]
-# then
-#   sed -i .bak "s/MAXTHETA.*/MAXTHETA                0.0/" config.cfg
-#   sed -i .bak "s/MINTHETA.*/MINTHETA                0.0/" config.cfg
-# fi
 cd output
 
 # echo "Particle: $particle
