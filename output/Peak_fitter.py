@@ -4,7 +4,7 @@ import math as m
 import time
 
 
-configuration = "PARALLEL"
+configuration = "PERPENDICULAR"
 setting = "TB"
 plot_offsets = True
 
