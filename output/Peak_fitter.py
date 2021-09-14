@@ -227,5 +227,4 @@ for i in range (0,len(names)):
 f_s.close()
 
 # print ("POS couple ". result[2])
-input('press a key')
-
+input('press a key') 
