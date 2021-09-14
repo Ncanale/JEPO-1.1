@@ -85,6 +85,19 @@ with open("Residuals_scan.txt") as f:
     EPar1_id   = [float(epar1.split(',')[0]) for epar1 in EPar1]
     # print ('EPar1_id ', EPar1_id)
 
+    CHI = [line.split(': ')[6] for line in lines]
+    # print ('CHI ', CHI)
+    CHI_id   = [float(chi.split(',')[0]) for chi in CHI]
+    # print ('CHI_id ', CHI_id)
+    
+    NDF = [line.split(': ')[7] for line in lines]
+    # print ('NDF ', NDF)
+    NDF_id   = [float(ndf.split(',')[0]) for ndf in NDF]
+    # print ('NDF_id ', NDF_id)
+
+Chi_reduced = []   
+for chi in CHI_id:    Chi_reduced.append(chi/NDF_id[0])
+# print ('red chi ', Chi_reduced)
 
 gr0 = make_graph_error(len(smearing_id),smearing_id,Par0_id,Esmearing_id,EPar0_id,"dE_scan","dE","Residual Par0")
 gr0Zoom = make_graph_error(len(smearing_id),smearing_id,Par0_id,Esmearing_id,EPar0_id,"dE_scan","dE","Residual Par0")
@@ -100,8 +113,20 @@ ref1_x=[min(smearing_id),max(smearing_id)]
 # print ("rX ", ref1_x, ", rY ", ref1_y)
 ref1 = make_graph(2,ref1_x,ref1_y,"dE_scan","dE","Residual Par1")
 
+zero = []
+for zeros in smearing_id : zero.append(0)
+grchi = make_graph_error(len(smearing_id),smearing_id,Chi_reduced,Esmearing_id,zero,"dE_Scan","dE","Residual - \chi^{2}/NDF")
+grchiZoom = make_graph_error(len(smearing_id),smearing_id,Chi_reduced,Esmearing_id,zero,"dE_Scan","dE","Residual - \chi^{2}/NDF")
+refchi_y=[1.0,1.0]
+refchi_x=[min(smearing_id),max(smearing_id)]
+# print ("rX ", refchi_x, ", rY ", refchi_y)
+refchi = make_graph(2,refchi_x,refchi_y,"dE_scan","dE","Residual \Chi")
+
+
+
+
 can=rt.TCanvas('can','dE_Resiudal_scan',2880,1800)
-can.Divide(2,2)
+can.Divide(3,2)
 can.cd(1)
 gr0.Draw()
 ref0.SetLineColor(2)
@@ -114,18 +139,34 @@ ref1.SetLineColor(2)
 ref1.Draw('same')
 
 can.cd(3)
+grchi.Draw()
+# grchi.GetYaxis().SetRangeUser(-0.1,0.1)
+refchi.SetLineColor(2)
+refchi.Draw('same')
+
+zoom_range_X =[0.21,0.23] 
+can.cd(4)
 gr0Zoom.Draw()
-gr0Zoom.GetXaxis().SetRangeUser(0.218,0.232)
-gr0Zoom.GetYaxis().SetRangeUser(0.96,1.04)
+gr0Zoom.GetXaxis().SetRangeUser(zoom_range_X[0],zoom_range_X[1])
+gr0Zoom.GetYaxis().SetRangeUser(0.9,1.12)
 ref0.SetLineColor(2)
 ref0.Draw('same')
 
-can.cd(4)
+can.cd(5)
 gr1Zoom.Draw()
-gr1Zoom.GetXaxis().SetRangeUser(0.218,0.232)
+gr1Zoom.GetXaxis().SetRangeUser(zoom_range_X[0],zoom_range_X[1])
 gr1Zoom.GetYaxis().SetRangeUser(-0.02,0.02)
 ref1.SetLineColor(2)
 ref1.Draw('same')
 
+can.cd(6)
+grchiZoom.Draw()
+grchiZoom.GetXaxis().SetRangeUser(zoom_range_X[0],zoom_range_X[1])
+grchiZoom.GetYaxis().SetRangeUser(-0.02,25)
+refchi.SetLineColor(2)
+refchi.Draw('same')
+
+can.SaveAs('dE_scan.root','root')
+can.SaveAs('dE_scan.pdf','pdf')
 
 input ('press a key to exit')
