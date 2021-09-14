@@ -1,7 +1,7 @@
 #!/bin/bash
 
-n_cores=8
-n_events=100000
+n_cores=$(nproc)
+n_events=10000
 n_runs=7
 
 #beam properties
@@ -66,13 +66,13 @@ sed -i "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitt
 if [[ "$configuration" == "PARALLEL" ]]
 then
   sed -i "s/^setting=.*/setting='G4'/" output/Peak_fitter.py
-  # root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
-  # sed -i  "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
+  root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
+  sed -i  "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
 elif [[ "$configuration" == "PERPENDICULAR" ]]
 then
-  sed -i "s/m_FlagBeamFile =.*/m_FlagBeamFile = 0;/" ../JEPO-1.1/src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
+  sed -i "s/m_FlagBeamFile =.*/m_FlagBeamFile = 0;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
   sed -i "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
-  sed -i "s/G4String angle=.*/G4String angle=\"$angle\";/" ../JEPO-1.1/src/BT2017PriGenAct.cc
+  sed -i "s/G4String angle=.*/G4String angle=\"$angle\";/" ../src/BT2017PriGenAct.cc
   sed -i "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
   if [[ "$angle" == "THETA" ]]
   then 

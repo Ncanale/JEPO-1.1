@@ -46,8 +46,8 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; 										// total number of layer modules
-const int n_runs = 15;								// number of runs -> radii, translations, etc
-const int nth = 8; 										// number of threads (also to expect from file names)
+const int n_runs = 7;
+const int nth = 8;
 const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
 const int Tn = CN/2; 									// number of front facing modules
 const Double_t Tb = 6; 								// tracker module base in cm
@@ -83,7 +83,7 @@ Double_t dF = d_lyso - 7.0;		//distance of source from start of front layer
 Double_t dB = d_lyso - 5.0;		//distance of source from start of back layer
 
 // configuration can be set to perpendicular or parallel
-bool configuration = PARALLEL;
+bool configuration = PERPENDICULAR;
 
 bool plot_slices = !configuration && true;
 bool plot_map = !configuration && true;

@@ -77,6 +77,7 @@ set(JEPO_SCRIPTS
 	run_mac.sh
 	dE_scan.sh
 	n_event.mac
+	beam_profile.cpp
 )
 
 foreach(_script ${JEPO_SCRIPTS})
