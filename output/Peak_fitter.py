@@ -39,7 +39,7 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 7
+n_runs      = 10
 
 
 Target= "Empty"
@@ -99,8 +99,9 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     theta_array = []
 
     theta_start = 5 
-    theta_step = 2
-    theta_step2= theta_step*1.1 
+    theta_step = 1
+    theta_step2 = theta_step*1.05 
+    theta_sigma = 3/n_runs
 
     for j in range(n_runs): 
         if configuration == "PARALLEL":
@@ -123,14 +124,13 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
                 fit_range = [min(phi_array)-1,max(phi_array)+1]
                 hist.Fit(total_fit_func,'','',)
             elif setting == "THETA":
-                theta_array.append(theta_start + (theta_step
-                *j))
+                theta_array.append(theta_start + (theta_step*j))
                 print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()*2/3)
                 total_fit_func.SetParameter((j*3),hist.GetMaximum()*2/3)  
                 print ('Set Parameter(',(j*3) +1,') \t: \t', (theta_start + (theta_step2*j)))
                 total_fit_func.SetParameter((j*3)+1, theta_start  + (theta_step2*j) ) 
-                print ('Set Parameter(',(j*3) +2,') \t: \t',0.5)
-                total_fit_func.SetParameter((j*3)+2,0.5)  
+                print ('Set Parameter(',(j*3) +2,') \t: \t',theta_sigma)
+                total_fit_func.SetParameter((j*3)+2,theta_sigma)  
                 fit_range = [theta_start-1,theta_start + (theta_step2*n_runs)+1]
                 
     hist.Fit(total_fit_func,'','',fit_range[0],fit_range[1])
