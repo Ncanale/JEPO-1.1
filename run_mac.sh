@@ -6,4 +6,5 @@ sed "s/sed -i \"/sed -i .bak \"/" |
 sed "s+/usr/bin/ninja-build+make -j\$(nproc)+" |
 sed "s+../src+../JEPO-1.1/src+" |
 sed "s+../n_event.mac+../JEPO-1.1/n_event.mac+" |
+sed "s+n_cores=.*+alias nproc=\"sysctl -n hw.physicalcpu\"\nn_cores=\$(nproc)+" |
 sh

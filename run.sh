@@ -128,7 +128,7 @@ cd output
 # Smearing: $smearing
 # Configuration: $configuration" > "details_$(date).txt"
 
-root -q Simulation_runner.cpp
+root -q -l Simulation_runner.cpp
 python3 Peak_fitter.py
 # if [[ "$configuration" == "PARALLEL" ]]
 # then

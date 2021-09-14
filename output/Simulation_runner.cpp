@@ -11,6 +11,7 @@
 
 
 //comment this section... 
+/*
 #include <root/TCanvas.h>
 #include <root/TChain.h>
 #include <root/TH1.h>
@@ -22,6 +23,7 @@
 #include <root/TFile.h>
 #include <root/TError.h>
 #include <root/TLatex.h>
+*/
 //... if ROOT is installed from source
 
 #define PERPENDICULAR 0
