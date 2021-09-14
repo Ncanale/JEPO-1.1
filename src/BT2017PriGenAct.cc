@@ -19,7 +19,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
     //ROOT::EnableImplicitMT( m_CM->GetNofTRD() );
 	
 	m_peID = 0;
-	m_FlagBeamFile = 1;
+	m_FlagBeamFile = 0;
     
 	// Gun position
 	m_WorldZ = m_CM->GetWorldZ();
