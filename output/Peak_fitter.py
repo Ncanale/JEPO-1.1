@@ -353,8 +353,5 @@ for i in range (0,len(names)):
 if residuals == True : 
     f_s.close()
 
-
-input('press a key')
-    
-
-
+# print ("POS couple ". result[2])
+input('press a key') 
