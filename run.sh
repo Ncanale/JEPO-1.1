@@ -2,7 +2,7 @@
 
 n_cores=8
 n_events=100000
-n_runs=15
+n_runs=7
 
 #beam properties
 particle=deuteron
@@ -15,6 +15,9 @@ file_name="${particle}${target}-${energy}MeV"
 #configuration=PARALLEL    #in all caps
 configuration=PERPENDICULAR    #in all caps
 smearing=0.19
+
+PERPENDICULAR="1111111111111111111111111111"
+PARALLEL="0001000000110000010000001100"
 
 rm -r output/${particle}*-*
 
@@ -30,6 +33,7 @@ sed -i "s/^NTHREADS.*/NTHREADS		    $n_cores/" config.cfg
 sed -i "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
 sed -i "s/^BEAMKINETICENERGY.*/BEAMKINETICENERGY	$energy/" config.cfg
 sed -i "s/^TRACKERCONFIG.*/TRACKERCONFIG	$configuration/" config.cfg
+sed -i "s/^TRACKERSETUP.*/TRACKERSETUP            ${!configuration}/" config.cfg
 
 sed -i "s/USETARGET.*/USETARGET		    OFF/" config.cfg
 if [[ "$target" != "Empty" ]]
@@ -65,10 +69,10 @@ do
 		sed -i "s/TRANSLATE.*/TRANSLATE              	${subtracted[$i]}/" config.cfg
 	elif [[ "$configuration" == "PERPENDICULAR" ]]
 	then
-		#sed -i "s/MINTHETA.*/MINTHETA                $((6 + (3 * $i))).0/" config.cfg
-		#sed -i "s/MAXTHETA.*/MAXTHETA                $((6 + (3 * $i))).0/" config.cfg
-		sed -i "s/MINTHETA.*/MINTHETA                ${phi_array[$i]}/" config.cfg
-		sed -i "s/MAXTHETA.*/MAXTHETA                ${phi_array[$i]}/" config.cfg
+		sed -i "s/MINTHETA.*/MINTHETA                $((6 + (3 * $i))).0/" config.cfg
+		sed -i "s/MAXTHETA.*/MAXTHETA                $((6 + (3 * $i))).0/" config.cfg
+		#sed -i "s/MINTHETA.*/MINTHETA                ${phi_array[$i]}/" config.cfg
+		#sed -i "s/MAXTHETA.*/MAXTHETA                ${phi_array[$i]}/" config.cfg
 	else
 		echo -e "\e[31mCHECK CONFIGURATION!!!\e[39m..."
 	fi

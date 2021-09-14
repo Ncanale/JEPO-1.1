@@ -96,7 +96,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 {
 	// event ID
 	m_eventID = event->GetEventID();
-	G4String angle="PHI";
+	G4String angle="THETA";
     if( m_PolIndex ) {
       /*
         hGenerator->GetRandom2( phi, theta );
