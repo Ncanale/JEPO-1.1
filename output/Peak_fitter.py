@@ -100,7 +100,7 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
 
     theta_start = 5 
     theta_step = 1
-    theta_step2 = theta_step*1.05 
+    theta_step2 = theta_step * 1.05 
     theta_sigma = 3/n_runs
 
     for j in range(n_runs): 
