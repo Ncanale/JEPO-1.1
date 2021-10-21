@@ -5,7 +5,7 @@ import time
 
 
 configuration = "PERPENDICULAR"
-setting = "THETA"
+setting = "PHI"
 plot_offsets = False
 residuals = False
 
@@ -29,7 +29,7 @@ elif configuration == "PERPENDICULAR":
         canvas_titles =['Theta scan']
     elif setting == "PHI":
         names = ['HPh']
-        path_names = ['HPH.root']
+        path_names = ['HPh.root']
         canvas_titles =['Phi scan']
     else:
         input ("CHECK SETTINGS!")
@@ -39,7 +39,7 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 7
+n_runs      = 15
 
 
 Target= "Empty"
@@ -80,22 +80,23 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     mean_error        = []
     sigma_error       = [] 
     Gauss             = [rt.TF1]*n_runs
+    phi_radiants      = []
     # # # print(fit_funcs)
     fit_string =''
     calibration_parameter = 1.5
-    for j in range(n_runs):   
-        if (j==n_runs-1):
-            fit_string+=' gaus('+ str(j*3) + ')'
-        else:
-            fit_string+=' gaus('+ str(j*3) + ') +'
         # print (fit_string)
 
     # print('\n fit_string = ', fit_string)
-    total_fit_func = rt.TF1('total_fit_funct',fit_string,-1.6,0.7)
+    # total_fit_func = rt.TF1('total_fit_funct',fit_string,-1.6,0.7)
     
     TB_peak_dist = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
     TB_Y_max = [334,1100,1550,1625,1458,1050,468]
     phi_array= [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 202.5, 225.0, 247.5, 270.0, 292.5, 315.0, 337.5]
+    # phi_radiants=[0.0, 0.39269908169872414, 0.7853981633974483, 1.1780972450961724, 1.5707963267948966, 1.9634954084936207, 2.356194490192345, 2.748893571891069, -2.748893571891069, -2.356194490192345, -1.9634954084936207, -1.5707963267948966, -1.1780972450961724, -0.7853981633974483, -0.39269908169872414]
+    radiants = [phi * np.pi/180 for phi in phi_array]
+    phi_radiants = np.arctan2(np.sin(radiants),np.cos(radiants))
+    phi_radiants.sort()
+    print ('PHI RAD', phi_radiants,' - ', len(phi_radiants))
     theta_array = []
 
     theta_start = 5 
@@ -104,7 +105,23 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
 
     # theta_sigma = 3/n_runs
     theta_sigma = 0.3
+    phi_sigma = 0.005
 
+    for j in range(n_runs):   
+        if (j==n_runs-1):
+            fit_string+=' gaus('+ str(j*3) + ')'
+        else:
+            fit_string+=' gaus('+ str(j*3) + ') +'
+    if configuration == "PARALLEL":
+        fit_range = [-1.55,0.7]
+    elif configuration == "PERPENDICULAR":
+        if setting == "PHI":
+            fit_range = [min(phi_radiants)-0.3,max(phi_radiants)+0.3]
+        elif setting == "THETA":
+            fit_range = [theta_start-1,theta_start + (theta_step2*n_runs)+1]
+
+    total_fit_func = rt.TF1('total_fit_funct',fit_string,fit_range[0],fit_range[1])
+    total_fit_func.SetNpx(1000)
 
     for j in range(n_runs): 
         if configuration == "PARALLEL":
@@ -117,15 +134,14 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
             fit_range = [-1.55,0.7]
         elif configuration == "PERPENDICULAR":
             if setting == "PHI":
-                total_fit_func.SetParameter((j*3),hist.GetMaximum()/2)  
-                print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()/2)
-                total_fit_func.SetParameter((j*3)+1, phi_array[j] ) 
-                print ('Set Parameter(',(j*3) +1,') \t: \t', phi_array[j])
+                total_fit_func.SetParameter((j*3),hist.GetMaximum()*2/3)  
+                print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()*2/3)
+                total_fit_func.SetParameter((j*3)+1, phi_radiants[j] ) 
+                print ('Set Parameter(',(j*3) +1,') \t: \t', phi_radiants[j])
                 total_fit_func.SetParameter((j*3)+2,1)  
-                print ('Set Parameter(',(j*3)+2,') \t: \t',0.1)
-                # total_fit_func.SetParameter((j*3)+2, 0.1)
-                fit_range = [min(phi_array)-1,max(phi_array)+1]
-                hist.Fit(total_fit_func,'','',)
+                print ('Set Parameter(',(j*3)+2,') \t: \t', phi_sigma)
+                total_fit_func.SetParameter((j*3)+2, phi_sigma)
+                fit_range = [min(phi_radiants)-0.3,max(phi_radiants)+0.3]
             elif setting == "THETA":
                 theta_array.append(theta_start + (theta_step2*j))
                 print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()*2/3)
@@ -158,6 +174,7 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
                 Gauss[j].SetLineColor(40)
             else:
                 Gauss[j].SetLineColor(j+1)
+            Gauss[j].SetNpx(1000)
             Gauss[j].Draw('same')
 
     canvas.SaveAs('Test.pdf','pdf')
@@ -194,10 +211,10 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
         print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' mm')
     elif configuration == "PERPENDICULAR":
         if setting == "PHI":
-            print ('expected means \t', phi_array )
+            print ('expected means \t', phi_radiants )
             print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
-            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' deg')
-            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated)*1000*np.pi/180,'\u00B1',np.mean(sigma_calbirated_error)*1000*np.pi/180,' mrad')
+            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' rad')
+            # print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated)*1000*np.pi/180,'\u00B1',np.mean(sigma_calbirated_error)*1000*np.pi/180,' mrad')
         elif setting == "THETA":
             print ('expected means \t', theta_array)
             print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
@@ -238,10 +255,15 @@ for i in range (0,len(names)):
     result = peak_fitter(canvas,f.Get(names[i]),rebin_value,n_runs,hist_mean,hist_max)
 
     if configuration == "PARALLEL":
-        print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' mm')  
+        print('\nAVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' mm')  
     elif configuration == "PERPENDICULAR":
-        print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' deg') 
-        print('\n AVERAGE sigma :', np.mean(result[-3])*1000*np.pi/180, ' \u00B1 ', np.mean(result[-2])*1000*np.pi/180,' mrad') 
+        if setting == "PHI":
+            print('\nAVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' rad') 
+            print('AVERAGE sigma :', np.mean(result[-3])*1000, ' \u00B1 ', np.mean(result[-2])*1000,' mrad\n') 
+
+        elif setting == "THETA":
+            print('\nAVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' deg') 
+            print('AVERAGE sigma :', np.mean(result[-3])*1000*np.pi/180, ' \u00B1 ', np.mean(result[-2])*1000*np.pi/180,' mrad\n') 
 
 
     calibration_parameter = result[-1]
@@ -254,9 +276,15 @@ for i in range (0,len(names)):
         print('peak dist ', diff ,' mm')
         print('AVERAGE peak distance ', np.mean(diff),' mm')
     elif configuration == "PERPENDICULAR":
-        print('peak dist ', diff ,' deg')
-        print('AVERAGE peak distance ', np.mean(diff),' deg')
-        print('AVERAGE peak distance ', np.mean(diff)*1000*np.pi/180,' mrad')
+        if setting == "PHI":
+            print('peak dist ', diff ,' rad')
+            print('AVERAGE peak distance ', np.mean(diff),' rad')
+            print('AVERAGE peak distance ', np.mean(diff)*1000,' mrad')
+
+        elif setting == "THETA":
+            print('peak dist ', diff ,' deg')
+            print('AVERAGE peak distance ', np.mean(diff),' deg')
+            print('AVERAGE peak distance ', np.mean(diff)*1000*np.pi/180,' mrad')
     # input('press a key REMEMBER TO COPY AMPLITUDE LINE ON OFFSET PLOTTER! ')
     # input('continue')
     f.Close()
