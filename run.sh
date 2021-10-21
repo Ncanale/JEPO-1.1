@@ -1,8 +1,8 @@
 #!/bin/bash
 
 n_cores=$(nproc)
-n_events=10000
-n_runs=7
+n_events=100000
+n_runs=5
 
 #beam properties
 particle=deuteron
@@ -34,7 +34,30 @@ sed -i "s+/run/beamOn.*+/run/beamOn $n_events+" ../n_event.mac
 sed -i "s/G4int NoE = .*/G4int NoE = $n_events;/" ../src/BT2017PriGenAct.cc
 sed -i "s/G4double Smear = .*/G4double Smear = $smearing;/" ../src/BT2017EveAct.cc
 
+if [[ "$configuration" == "PARALLEL" ]]
+then
+  root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
+  sed -i  "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
+elif [[ "$configuration" == "PERPENDICULAR" ]]
+then
+  sed -i "s/m_FlagBeamFile =.*/m_FlagBeamFile = 0;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
+  sed -i "s/G4String angle=.*/G4String angle=\"$angle\";/" ../src/BT2017PriGenAct.cc
+fi
+
 /usr/bin/ninja-build
+
+if [[ "$configuration" == "PARALLEL" ]]
+then
+  sed -i "s/^setting=.*/setting='G4'/" output/Peak_fitter.py
+elif [[ "$configuration" == "PERPENDICULAR" ]]
+then
+  sed -i "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
+  if [[ "$angle" == "THETA" ]]
+  then 
+   sed -i "s/theta_start = .*/theta_start = $theta_start/" output/Peak_fitter.py
+   sed -i "s/theta_step = .*/theta_step = $theta_step/" output/Peak_fitter.py
+  fi 
+fi
 
 sed -i "s/^NTHREADS.*/NTHREADS		    $n_cores/" config.cfg
 sed -i "s/^PARTICLENAME.*/PARTICLENAME            $particle/" config.cfg
@@ -62,26 +85,6 @@ sed -i "s/^Target= .*/Target= \"$target\"/" output/Peak_fitter.py
 sed -i "s/^Energy=.*/Energy=$energy/" output/Peak_fitter.py
 sed -i "s/^Smearing=.*/Smearing=$smearing/" output/Peak_fitter.py
 sed -i "s/^configuration.*/configuration = \"$configuration\"/" output/Peak_fitter.py
-
-if [[ "$configuration" == "PARALLEL" ]]
-then
-  sed -i "s/^setting=.*/setting='G4'/" output/Peak_fitter.py
-  root -q -l "beam_profile.cpp($n_events)" # Own code for generating beam profile, comment for new users
-  sed -i  "s/m_FlagBeamFile =.*/m_FlagBeamFile = 1;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
-elif [[ "$configuration" == "PERPENDICULAR" ]]
-then
-  sed -i "s/m_FlagBeamFile =.*/m_FlagBeamFile = 0;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
-  sed -i "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
-  sed -i "s/G4String angle=.*/G4String angle=\"$angle\";/" ../src/BT2017PriGenAct.cc
-  if [[ "$angle" == "THETA" ]]
-  then 
-   sed -i "s/theta_start = .*/theta_start = $theta_start/" output/Peak_fitter.py
-   sed -i "s/theta_step = .*/theta_step = $theta_step/" output/Peak_fitter.py
-  elif [[ "$angle" == "PHI" ]]
-  then
-	sed -i "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
-  fi 
-fi
 
 sleep 1
 # subtracted=(0.1  5 10 15 20 25 29.9)
