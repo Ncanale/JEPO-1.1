@@ -89,23 +89,7 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     # print('\n fit_string = ', fit_string)
     # total_fit_func = rt.TF1('total_fit_funct',fit_string,-1.6,0.7)
     
-    TB_peak_dist = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
-    TB_Y_max = [334,1100,1550,1625,1458,1050,468]
-    phi_array= [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 202.5, 225.0, 247.5, 270.0, 292.5, 315.0, 337.5]
-    # phi_radiants=[0.0, 0.39269908169872414, 0.7853981633974483, 1.1780972450961724, 1.5707963267948966, 1.9634954084936207, 2.356194490192345, 2.748893571891069, -2.748893571891069, -2.356194490192345, -1.9634954084936207, -1.5707963267948966, -1.1780972450961724, -0.7853981633974483, -0.39269908169872414]
-    radiants = [phi * np.pi/180 for phi in phi_array]
-    phi_radiants = np.arctan2(np.sin(radiants),np.cos(radiants))
-    phi_radiants.sort()
-    print ('PHI RAD', phi_radiants,' - ', len(phi_radiants))
-    theta_array = []
-
-    theta_start = 5 
-    theta_step = 2
-    theta_step2 = theta_step * 1.06 
-
-    # theta_sigma = 3/n_runs
-    theta_sigma = 0.3
-    phi_sigma = 0.005
+    
 
     for j in range(n_runs):   
         if (j==n_runs-1):
@@ -113,11 +97,28 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
         else:
             fit_string+=' gaus('+ str(j*3) + ') +'
     if configuration == "PARALLEL":
+        TB_peak_dist = [-1.39,-1.06,-0.73,-0.4,-0.06,0.23,0.53]
+        TB_Y_max = [334,1100,1550,1625,1458,1050,468]
         fit_range = [-1.55,0.7]
     elif configuration == "PERPENDICULAR":
         if setting == "PHI":
+            phi_array= [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, 202.5, 225.0, 247.5, 270.0, 292.5, 315.0, 337.5]
+            # phi_radiants=[0.0, 0.39269908169872414, 0.7853981633974483, 1.1780972450961724, 1.5707963267948966, 1.9634954084936207, 2.356194490192345, 2.748893571891069, -2.748893571891069, -2.356194490192345, -1.9634954084936207, -1.5707963267948966, -1.1780972450961724, -0.7853981633974483, -0.39269908169872414]
+            radiants = [phi * np.pi/180 for phi in phi_array]
+            phi_radiants = np.arctan2(np.sin(radiants),np.cos(radiants))
+            phi_radiants.sort()
+            print ('PHI RAD', phi_radiants,' - ', len(phi_radiants))
+            phi_sigma = 0.005
             fit_range = [min(phi_radiants)-0.3,max(phi_radiants)+0.3]
         elif setting == "THETA":
+            theta_array = []
+
+            theta_start = 5 
+            theta_step = 2
+            theta_step2 = theta_step * 1.06 
+
+            # theta_sigma = 3/n_runs
+            theta_sigma = 0.3
             fit_range = [theta_start-1,theta_start + (theta_step2*n_runs)+1]
 
     total_fit_func = rt.TF1('total_fit_funct',fit_string,fit_range[0],fit_range[1])
