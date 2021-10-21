@@ -39,11 +39,11 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 7 +1
+n_runs      = 7
 
 
 Target= "Empty"
-Smearing=0.19
+Smearing=0.22
 Energy=270
 
 sigmas = []
@@ -99,9 +99,12 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
     theta_array = []
 
     theta_start = 5 
-    theta_step = 1
-    theta_step2 = theta_step * 1.05 
-    theta_sigma = 3/n_runs
+    theta_step = 2
+    theta_step2 = theta_step * 1.06 
+
+    # theta_sigma = 3/n_runs
+    theta_sigma = 0.3
+
 
     for j in range(n_runs): 
         if configuration == "PARALLEL":
@@ -124,7 +127,7 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
                 fit_range = [min(phi_array)-1,max(phi_array)+1]
                 hist.Fit(total_fit_func,'','',)
             elif setting == "THETA":
-                theta_array.append(theta_start + (theta_step*j))
+                theta_array.append(theta_start + (theta_step2*j))
                 print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()*2/3)
                 total_fit_func.SetParameter((j*3),hist.GetMaximum()*2/3)  
                 print ('Set Parameter(',(j*3) +1,') \t: \t', (theta_start + (theta_step2*j)))
@@ -148,11 +151,15 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
         sigma.append(total_fit_func.GetParameter((j*3)+2))
         sigma_error.append(total_fit_func.GetParError((j*3)+2))
         func_name = 'funct_'+str(j)
-        Gauss[j] = rt.TF1(func_name,'[0]*exp(-0.5*((x-[1])/[2])**2)',-1.6,0.8)
+        Gauss[j] = rt.TF1(func_name,'[0]*exp(-0.5*((x-[1])/[2])**2)',fit_range[0],fit_range[1])
         Gauss[j].SetParameters(total_fit_func.GetParameter(j*3),mean[j],sigma[j])
-        if setting == 'G4':
-            Gauss[j].SetLineColor(j+1)
+        if setting != 'TB':
+            if j == 9:
+                Gauss[j].SetLineColor(40)
+            else:
+                Gauss[j].SetLineColor(j+1)
             Gauss[j].Draw('same')
+
     canvas.SaveAs('Test.pdf','pdf')
 
     if configuration == "PARALLEL":
@@ -190,10 +197,12 @@ def peak_fitter(canvas,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
             print ('expected means \t', phi_array )
             print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
             print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' deg')
+            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated)*1000*np.pi/180,'\u00B1',np.mean(sigma_calbirated_error)*1000*np.pi/180,' mrad')
         elif setting == "THETA":
             print ('expected means \t', theta_array)
             print ('sigmas calibrated', sigma_calbirated , '\u00B1',sigma_calbirated_error )
             print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated),'\u00B1',np.mean(sigma_calbirated_error),' deg')
+            print ('AVERAGE sigma CALIBRATED: ', np.mean(sigma_calbirated)*1000*np.pi/180,'\u00B1',np.mean(sigma_calbirated_error)*1000*np.pi/180,' mrad')
 
     return(amplitude,amplitude_error,mean,mean_error,sigma,sigma_error,sigma_calbirated,sigma_calbirated_error,calib_parameter)
 if residuals == True : 
@@ -232,6 +241,8 @@ for i in range (0,len(names)):
         print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' mm')  
     elif configuration == "PERPENDICULAR":
         print('\n AVERAGE sigma :', np.mean(result[-3]), ' \u00B1 ', np.mean(result[-2]),' deg') 
+        print('\n AVERAGE sigma :', np.mean(result[-3])*1000*np.pi/180, ' \u00B1 ', np.mean(result[-2])*1000*np.pi/180,' mrad') 
+
 
     calibration_parameter = result[-1]
     for mean in result[2]: position_calibrated.append(mean*calibration_parameter)
@@ -245,6 +256,7 @@ for i in range (0,len(names)):
     elif configuration == "PERPENDICULAR":
         print('peak dist ', diff ,' deg')
         print('AVERAGE peak distance ', np.mean(diff),' deg')
+        print('AVERAGE peak distance ', np.mean(diff)*1000*np.pi/180,' mrad')
     # input('press a key REMEMBER TO COPY AMPLITUDE LINE ON OFFSET PLOTTER! ')
     # input('continue')
     f.Close()
