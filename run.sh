@@ -18,9 +18,9 @@ configuration=PERPENDICULAR    #in all caps
 angle=THETA                     #in all caps
 
 theta_start=5
-theta_step=1
+theta_step=2
 
-smearing=0.19
+smearing=0.22
 
 PERPENDICULAR="1111111111111111111111111111"
 PARALLEL="0001000000110000010000001100"
@@ -73,11 +73,13 @@ then
   sed -i "s/m_FlagBeamFile =.*/m_FlagBeamFile = 0;/" ../src/BT2017PriGenAct.cc # Own code for generating beam profile, comment for new users (or set = 0)
   sed -i "s/^setting.*/setting = \"$angle\"/" output/Peak_fitter.py
   sed -i "s/G4String angle=.*/G4String angle=\"$angle\";/" ../src/BT2017PriGenAct.cc
-  sed -i "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
   if [[ "$angle" == "THETA" ]]
   then 
-   sed -i "s/^theta_start = .*/theta_start = $theta_start/" output/Peak_fitter.py
-   sed -i "s/^theta_step = .*/theta_step = $theta_step/" output/Peak_fitter.py
+   sed -i "s/theta_start = .*/theta_start = $theta_start/" output/Peak_fitter.py
+   sed -i "s/theta_step = .*/theta_step = $theta_step/" output/Peak_fitter.py
+  elif [[ "$angle" == "PHI" ]]
+  then
+	sed -i "s/^n_runs      = .*/n_runs      = $n_runs +1/" output/Peak_fitter.py #FOR PHI SCAN  
   fi 
 fi
 
