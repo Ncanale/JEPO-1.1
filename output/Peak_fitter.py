@@ -5,7 +5,7 @@ import time
 
 
 configuration = "PERPENDICULAR"
-setting = "THETA"
+setting = "PHI"
 plot_offsets = False
 residuals = False
 
@@ -42,7 +42,6 @@ else:
 
 rebin_value = 1 
 n_runs      = 26
-
 
 Target= "Empty"
 Smearing=0.22
@@ -115,9 +114,8 @@ def peak_fitter(canvas1,canvas2,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
             # phi_sigma = 0.005
             # fit_range = [min(phi_radiants)-0.3,max(phi_radiants)+0.3]
 
-            # phi_array = [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, - 22.5, - 45.0, - 67.5, - 90.0, - 112.5, - 135.0, - 157.5 ]
-            phi_array = [0.0, 11.25, 22.5, 33.75, 45.0, 56.25, 67.5, 78.75, 90.0, 101.25, 112.5, 123.75, 135.0, 146.25, 157.5, 168.75, 180.0, 191.25, 202.5, 213.75, 225.0, 236.25, 247.5, 258.75, 270.0, 281.25, 292.5, 303.75, 315.0, 326.25, 337.5, 348.75]
-            phi_array.sort()
+            phi_array= [5.625, 11.25, 22.5, 33.75, 45.0, 56.25, 67.5, 78.75, 84.375, 90.0, 95.625, 101.25, 112.5, 123.75, 135.0, 146.25, 157.5, 168.75, 174.375, 180.0, 185.625, 191.25, 202.5, 213.75, 225.0, 236.25, 247.5, 258.75, 264.375, 270.0, 275.625, 281.25, 292.5, 303.75, 315.0, 326.25, 337.5, 348.75, 354.375]
+            phi_array = [phi - 180.0 for phi in phi_array]
             phi_sigma = 0.1
             fit_range = [min(phi_array)-3,max(phi_array)+3]
         
