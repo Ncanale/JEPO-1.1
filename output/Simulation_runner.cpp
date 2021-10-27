@@ -172,17 +172,17 @@ void* SR_func(void* ptr)
 			Double_t yl = (dF/zF)*yF;
 			if(plot_map) HmapXY[M[0]]->Fill(xl,yl);
 			if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
-			if(plot_map) HmapThP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl)/dF);
+			if(plot_map) HmapThP[M[0]]->Fill(atan2(yl,xl),atan(sqrt(xl*xl + yl*yl)/dF));
 
 			if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPh[M[0]]->Fill(atan2(yl,xl));
 			if(plot_slices) HPh_deg[M[0]]->Fill(atan2(yl,xl)*180/TMath::Pi());
-			if(plot_slices) HTh[M[0]]->Fill(sqrt(xl*xl + yl*yl));
+			if(plot_slices) HTh[M[0]]->Fill(180/TMath::Pi()*atan(sqrt(xl*xl + yl*yl)/dF));
 
 			if(plot_slices) HRaR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPhR[M[0]][M[3]]->Fill(atan2(yl,xl));
-			if(plot_slices) HPhR_deg[M[0]][M[3]]->Fill(atan2(yl,xl)*180/ TMath::Pi());
-			if(plot_slices) HThR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl)/dF);
+			if(plot_slices) HPhR_deg[M[0]][M[3]]->Fill(atan2(yl,xl)*180/TMath::Pi());
+			if(plot_slices) HThR[M[0]][M[3]]->Fill(180/TMath::Pi()*atan(sqrt(xl*xl + yl*yl)/dF));
 		}
 
 		if((tF == 1) && (tB == 1) && plot_offsets)
@@ -210,19 +210,19 @@ void init_vars()
 	{
 		if(plot_map) HmapXY[i] = new TH2F("HmapXY", "X-Y Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_map) HmapRP[i] = new TH2F("HmapRP", "R-#phi Map;#phi;R",500,-4,4,500,0,21);
-		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",500,-4,4,500,0,25);
+		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",500,-4,4,400,0,20);
 		if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
 		if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
 		if(plot_slices) HPh[i] = new TH1F("HPh", "#phi Distribution;#phi;Counts",3000,-4,4);
 		if(plot_slices) HPh_deg[i] = new TH1F("HPh_deg", "#phi Distribution (deg);#phi;Counts",4000,-200,200);
-		if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",500,0,25);
+		if(plot_slices) HTh[i] = new TH1F("HTh", "#theta Distribution;#theta;Counts",400,0,20);
 		for(int j=0; j<n_runs; j++)
 		{
 			if(plot_slices) HRaR[i][j] = new TH1F((string("HRaR_")+to_string(j)).data(), "Radius Distribution per Run;R;Counts",3000,0,21);
 			if(plot_slices) HPhR[i][j] = new TH1F((string("HPhR_")+to_string(j)).data(), "#phi Distribution per Run;#phi;Counts",3000,-4,4);
 			if(plot_slices) HPhR_deg[i][j] = new TH1F((string("HPhR_deg_")+to_string(j)).data(), "#phi Distribution per Run (deg=);#phi;Counts",4000,-200,200);
-			if(plot_slices) HThR[i][j] = new TH1F((string("HThR_")+to_string(j)).data(), "#theta Distribution per Run;#phi;Counts",500,0,25);
+			if(plot_slices) HThR[i][j] = new TH1F((string("HThR_")+to_string(j)).data(), "#theta Distribution per Run;#phi;Counts",400,0,20);
 		}
 	}
 	for(int i=0; i<CN; i++)

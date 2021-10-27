@@ -2,7 +2,7 @@
 
 n_cores=$(nproc)
 n_events=100000
-n_runs=5
+n_runs=26
 
 #beam properties
 particle=deuteron
@@ -91,7 +91,8 @@ sleep 1
 subtracted=(0.24739106414386924 5.065845196500294 10.152798578987705 15.218870720097698 20.038899210298244 24.438954737516877 28.93078785640231)
 
 # phi_array=(0 45 90 135 225 270 315)
-phi_array=(0.0 22.5 45.0 67.5 90.0 112.5 135.0 157.5 202.5 225.0 247.5 270.0 292.5 315.0 337.5) #15
+# phi_array=(0.0 22.5 45.0 67.5 90.0 112.5 135.0 157.5 202.5 225.0 247.5 270.0 292.5 315.0 337.5) #15
+phi_array=(0.0 11.25 22.5 33.75 45.0 56.25 67.5 78.75 90.0 101.25 112.5 123.75 135.0 146.25 157.5 168.75 191.25 202.5 213.75 225.0 236.25 247.5 258.75 270.0 281.25 292.5 303.75 315.0 326.25 337.5 348.75) #31
 theta_array=(5 5.5 6 6.5 7 7.5 8 8.5 9 9.5 10 10.5 11 11.5 12 12.5 13 13.5 14 14.5 15 15.5 16 16.5 17 17.5) #26
            
 for (( i=0; i<$n_runs; i++ ))
@@ -108,8 +109,10 @@ do
       		sed -i "s/MAXTHETA.*/MAXTHETA                ${phi_array[$i]}/" config.cfg
     	elif [[ "$angle" == "THETA" ]]
     	then
-      		sed -i "s/MINTHETA.*/MINTHETA                $(($theta_start + ($theta_step*$i))).0/" config.cfg
-      		sed -i "s/MAXTHETA.*/MAXTHETA                $(($theta_start + ($theta_step*$i))).0/" config.cfg
+      		sed -i "s/MINTHETA.*/MINTHETA                ${theta_array[$i]}/" config.cfg
+      		sed -i "s/MAXTHETA.*/MAXTHETA                ${theta_array[$i]}/" config.cfg
+      		# sed -i "s/MINTHETA.*/MINTHETA                $(($theta_start + ($theta_step*$i))).0/" config.cfg
+      		# sed -i "s/MAXTHETA.*/MAXTHETA                $(($theta_start + ($theta_step*$i))).0/" config.cfg
     	else 
     	  	echo -e "CHECK ANGLE!!!"
     	fi

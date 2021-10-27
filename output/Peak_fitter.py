@@ -41,7 +41,7 @@ else:
     input ("CHECK THE CONFIGURATIONS")
 
 rebin_value = 1 
-n_runs      = 7
+n_runs      = 26
 
 
 Target= "Empty"
@@ -115,7 +115,8 @@ def peak_fitter(canvas1,canvas2,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
             # phi_sigma = 0.005
             # fit_range = [min(phi_radiants)-0.3,max(phi_radiants)+0.3]
 
-            phi_array= [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, - 22.5, - 45.0, - 67.5, - 90.0, - 112.5, - 135.0, - 157.5 ]
+            # phi_array = [0.0, 22.5, 45.0, 67.5, 90.0, 112.5, 135.0, 157.5, - 22.5, - 45.0, - 67.5, - 90.0, - 112.5, - 135.0, - 157.5 ]
+            phi_array = [0.0, 11.25, 22.5, 33.75, 45.0, 56.25, 67.5, 78.75, 90.0, 101.25, 112.5, 123.75, 135.0, 146.25, 157.5, 168.75, 180.0, 191.25, 202.5, 213.75, 225.0, 236.25, 247.5, 258.75, 270.0, 281.25, 292.5, 303.75, 315.0, 326.25, 337.5, 348.75]
             phi_array.sort()
             phi_sigma = 0.1
             fit_range = [min(phi_array)-3,max(phi_array)+3]
@@ -131,8 +132,9 @@ def peak_fitter(canvas1,canvas2,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
 
             theta_array=[5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 17.5] 
             theta_array.sort()
-            theta_sigma = 0.1
-            fit_range = [min(theta_array)-2,max(theta_array)+1]
+            print('THETA ARRAY ', theta_array)
+            theta_sigma = 0.05
+            fit_range = [min(theta_array)-2,max(theta_array)+2]
 
     total_fit_func = rt.TF1('total_fit_funct',fit_string,fit_range[0],fit_range[1])
     total_fit_func.SetNpx(1000)
@@ -164,7 +166,7 @@ def peak_fitter(canvas1,canvas2,hist,rebin_value,n_runs,TB_peak_dist,TB_Y_max):
                 print ('Set Parameter(',j*3,') \t: \t',hist.GetMaximum()*99/100)
                 # total_fit_func.SetParameter((j*3)+1, phi_radiants[j] ) 
                 # print ('Set Parameter(',(j*3) +1,') \t: \t', phi_radiants[j])
-                total_fit_func.SetParameter((j*3)+1, theta_array[j] ) 
+                total_fit_func.SetParameter((j*3)+1, theta_array[j]) 
                 print ('Set Parameter(',(j*3) +1,') \t: \t', theta_array[j])
                 total_fit_func.SetParameter((j*3)+2,1)  
                 print ('Set Parameter(',(j*3)+2,') \t: \t', theta_sigma)
