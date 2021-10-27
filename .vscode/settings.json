@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "valarray": "cpp",
+        "cmath": "cpp",
+        "string": "cpp",
+        "*.tcc": "cpp",
+        "h1": "cpp",
+        "h2": "cpp",
+        "h3": "cpp"
+    }
+}
