@@ -172,17 +172,17 @@ void* SR_func(void* ptr)
 			Double_t yl = (dF/zF)*yF;
 			if(plot_map) HmapXY[M[0]]->Fill(xl,yl);
 			if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
-			if(plot_map) HmapThP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl)/dF);
+			if(plot_map) HmapThP[M[0]]->Fill(atan2(yl,xl),atan(sqrt(xl*xl + yl*yl)/dF));
 
 			if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPh[M[0]]->Fill(atan2(yl,xl));
-			if(plot_slices) HPh_deg[M[0]]->Fill(atan2(yl,xl)*180/TMath::Pi());
-			if(plot_slices) HTh[M[0]]->Fill(sqrt(xl*xl + yl*yl));
+			if(plot_slices) HPh_deg[M[0]]->Fill(atan2(yl,xl) * 180/TMath::Pi());
+			if(plot_slices) HTh[M[0]]->Fill(atan(sqrt(xl*xl + yl*yl)/dF));
 
 			if(plot_slices) HRaR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPhR[M[0]][M[3]]->Fill(atan2(yl,xl));
-			if(plot_slices) HPhR_deg[M[0]][M[3]]->Fill(atan2(yl,xl)*180/ TMath::Pi());
-			if(plot_slices) HThR[M[0]][M[3]]->Fill(sqrt(xl*xl + yl*yl)/dF);
+			if(plot_slices) HPhR_deg[M[0]][M[3]]->Fill(atan2(yl,xl) * 180/TMath::Pi());
+			if(plot_slices) HThR[M[0]][M[3]]->Fill(atan(sqrt(xl*xl + yl*yl)/dF));
 		}
 
 		if((tF == 1) && (tB == 1) && plot_offsets)
