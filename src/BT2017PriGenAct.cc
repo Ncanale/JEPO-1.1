@@ -96,7 +96,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 {
 	// event ID
 	m_eventID = event->GetEventID();
-	G4String angle="THETA";
+	G4String angle="PHI";
     if( m_PolIndex ) {
       /*
         hGenerator->GetRandom2( phi, theta );
@@ -155,7 +155,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	for(int i=m_peID;i<(m_eventID-1);i++) f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
 	m_peID = m_eventID;
 
-    G4int NoE = 10000;
+    G4int NoE = 100000;
     if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
 	PG -> SetParticleMomentumDirection(m_MomDir);
 
