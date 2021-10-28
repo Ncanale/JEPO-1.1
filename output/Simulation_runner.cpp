@@ -48,7 +48,7 @@ int Dtheta = 8;
 int Ds = 5;
 
 const int CN = 14; 										// total number of layer modules
-const int n_runs = 7;
+const int n_runs = 26;
 const int nth = 8;
 const unsigned int TOP_N = 1; 				// the top N offset/ratio plots (based on no. of entries at tracker interface) to plot and store
 const int Tn = CN/2; 									// number of front facing modules
@@ -172,7 +172,7 @@ void* SR_func(void* ptr)
 			Double_t yl = (dF/zF)*yF;
 			if(plot_map) HmapXY[M[0]]->Fill(xl,yl);
 			if(plot_map) HmapRP[M[0]]->Fill(atan2(yl,xl),sqrt(xl*xl + yl*yl));
-			if(plot_map) HmapThP[M[0]]->Fill(atan2(yl,xl),atan(sqrt(xl*xl + yl*yl)/dF));
+			if(plot_map) HmapThP[M[0]]->Fill(180/TMath::Pi()*atan2(yl,xl),180/TMath::Pi()*atan(sqrt(xl*xl + yl*yl)/dF));
 
 			if(plot_slices) HRa[M[0]]->Fill(sqrt(xl*xl + yl*yl));
 			if(plot_slices) HPh[M[0]]->Fill(atan2(yl,xl));
@@ -210,7 +210,7 @@ void init_vars()
 	{
 		if(plot_map) HmapXY[i] = new TH2F("HmapXY", "X-Y Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_map) HmapRP[i] = new TH2F("HmapRP", "R-#phi Map;#phi;R",500,-4,4,500,0,21);
-		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",500,-4,4,400,0,20);
+		if(plot_map) HmapThP[i] = new TH2F("HmapThP", "#theta-#phi Map;#phi;#theta",362,-181,+181,400,0,20);
 		if(plot_generator) HmapGXY[i] = new TH2F("HmapGen", "Generator XY Map;X;Y",500,-21,21,500,-21,21);
 		if(plot_generator) HmapGRP[i] = new TH2F("HmapGen", "Generator R-#phi Map;#phi;R",500,-4,4,500,0,21);
 		if(plot_slices) HRa[i] = new TH1F("HRa", "Radius Distribution;R;Counts",3000,0,21);
