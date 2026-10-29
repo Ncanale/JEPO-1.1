@@ -56,5 +56,5 @@ void BT2017ActIni::Build() const
 	BT2017EveAct* BT2017EA = new BT2017EveAct(m_CM,prigenact);
 	SetUserAction(BT2017EA);
   
-	SetUserAction(new BT2017SteAct(BT2017EA));
+	SetUserAction(new BT2017SteAct(BT2017EA, m_CM));
 }

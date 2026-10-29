@@ -19,7 +19,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
     //ROOT::EnableImplicitMT( m_CM->GetNofTRD() );
 	
 	m_peID = 0;
-	m_FlagBeamFile = 0;
+	m_FlagBeamFile = m_CM->GetUseBeamFile();   // config BEAMFILE (was set by run.sh)
     
 	// Gun position
 	m_WorldZ = m_CM->GetWorldZ();
@@ -47,7 +47,17 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 	// Kinetic energy
 	m_KinEgy = m_CM->GetBeamKE();
 	PG->SetParticleEnergy(m_KinEgy);
-	if(m_FlagBeamFile) f.open("beam.in", std::fstream::in);
+	// Read the whole beam file: reading it line by line in each worker made the
+	// line used by an event depend on the thread scheduling (not reproducible)
+	if(m_FlagBeamFile)
+	{
+		f.open("beam.in", std::fstream::in);
+		G4double x, y, z;
+		while(f >> x >> y >> z) m_Beam.push_back({x, y, z});
+		f.close();
+		if(m_Beam.empty())
+			G4Exception("BT2017PriGenAct", "JEPO002", FatalException, "BEAMFILE ON but beam.in missing or empty");
+	}
 
 	// Polarization
 // 	m_Pol = G4ThreeVector(0., 1., 0.);
@@ -96,7 +106,7 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 {
 	// event ID
 	m_eventID = event->GetEventID();
-	G4String angle="PHI";
+	G4String angle = m_CM->GetGenThetaScan() ? "THETA" : "PHI";   // config GENANGLE
     if( m_PolIndex ) {
       /*
         hGenerator->GetRandom2( phi, theta );
@@ -152,8 +162,6 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
     
 	G4double dY = (f-1)*15 + 21.1095; //TB eta F shape + f_offset  
   */
-	for(int i=m_peID;i<(m_eventID-1);i++) f.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-	m_peID = m_eventID;
 
     G4int NoE = 100000;
     if(m_eventID%(NoE/100)==0 && NoE>=100){G4cerr<<m_eventID/(NoE/100)<<"%"<<G4endl;}
@@ -162,9 +170,11 @@ void BT2017PriGenAct::GeneratePrimaries(G4Event *event)
 	G4double dX = 0, dY = 0, dZ = 0;
 	if(m_FlagBeamFile)		// Beam Distribution from file
 	{
-		f>>dX>>dY>>dZ;
+		const auto& line = m_Beam[m_eventID % m_Beam.size()];
+		dY = line[1];
+		dZ = line[2];
 		dX = G4RandGauss::shoot(0., m_BeamDX / mm / 1.0); // 1 sigma
-		dY = dY + 21.1095;
+		dY = dY + m_CM->GetTrFrontOffset() / mm;   // align with the shifted front layer
 	}
 	else		// 2D Gaussian
 	{

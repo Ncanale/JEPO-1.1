@@ -12,14 +12,15 @@
 #include "BT2017SteAct.hh"
 #include "BT2017EveAct.hh"
 #include "BT2017Ana.hh"
+#include "BT2017ConMan.hh"
 
 //////////////////////////////////////////////////
 //   Constructor                                //
 //////////////////////////////////////////////////
-BT2017SteAct::BT2017SteAct(BT2017EveAct* EA)
+BT2017SteAct::BT2017SteAct(BT2017EveAct* EA, BT2017ConMan* CM)
 	: G4UserSteppingAction(), m_EA(EA)
 {
-	m_DM = new BT2017DetMap();
+	m_DM = new BT2017DetMap(CM -> GetTrNBars());
 }
 
 //////////////////////////////////////////////////

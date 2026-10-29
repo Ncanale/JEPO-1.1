@@ -10,6 +10,8 @@
 //                    - 21. Nov. 2017. Hoyong Jeong (hyjeong@hep.korea.ac.kr) //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <array>
+#include <vector>
 #include "globals.hh"
 #include "Randomize.hh"
 
@@ -101,6 +103,7 @@ class BT2017PriGenAct: public G4VUserPrimaryGeneratorAction
 		G4int GetParticle();
 		G4int GetGenEventID();
 		std::fstream f;
+		std::vector<std::array<G4double,3>> m_Beam;   // beam.in, line i used by event i
 };
 
 #endif

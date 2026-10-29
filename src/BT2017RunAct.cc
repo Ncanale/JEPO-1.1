@@ -23,7 +23,7 @@ BT2017RunAct::BT2017RunAct(BT2017ConMan* CM)
 {
 	// Initialize detector setup configuration
 	m_DetSet = m_CM -> GetDetSet();
-	BT2017DetMap* DM = new BT2017DetMap(); 
+	BT2017DetMap* DM = new BT2017DetMap(m_CM -> GetTrNBars());
 
 	// Create analysis manager
 	// The choice of analysis technology is done via selection of a namespace
@@ -52,7 +52,7 @@ BT2017RunAct::BT2017RunAct(BT2017ConMan* CM)
 	for(G4int i = 0; i < 4; i++)
 		AM -> CreateNtupleDColumn("kE_" + DM->GetdENameFromdEID(i));
 
-	for(G4int i = 0; i < 28; i++)
+	for(G4int i = 0; i < m_CM -> GetTrNTotal(); i++)
 		AM -> CreateNtupleDColumn("kE_" + DM->GetTrNameFromTrID(i));
 
 	AM -> CreateNtupleDColumn("tg_theta");

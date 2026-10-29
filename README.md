@@ -18,6 +18,20 @@ You got that????
 
 custom experiments can be run by using/modifying run.sh
 
+Reproducible scans without editing the sources (Geant4 11, see History):
+
+    cmake -G Ninja -DWITH_GEANT4_UIVIS=OFF .. && ninja            # in build/
+    scripts/run_scan.sh build out/theta theta 100000 [keys-file]   # theta scan, full detector
+    scripts/run_scan.sh build out/tb    tb    100000 [keys-file]   # 2018 test-beam setup
+    scripts/run_scan.sh build out/u     uniform 500000 [keys-file] # one run, theta uniform
+    python analysis/sith_reco.py theta|tb|uniform --runs 'out/theta/output/*MeV_t*-{run}.root' \
+        --nruns 26 --geometry out/theta/config_last.cfg
+
+keys-file holds "KEY value" lines overriding config.cfg, e.g. a different bar
+geometry (TRACKERBASE, TRACKERHEIGHT, TRACKERNBARS, TRACKERLENGTH, TRACKERSETUP ALL)
+or smearing model. scripts/analyse_original.sh runs the original ROOT tools
+(output/Simulation_runner.cpp, output/Peak_fitter.py) on the same output.
+
 ##################################################
 #   History                                      #
 ##################################################
@@ -40,3 +54,19 @@ custom experiments can be run by using/modifying run.sh
   - Added ability to switch between parallel and perpendicular configurations of tracker bars
     in config file.
   - Disabled switches of fixed and moving columns.
+
+= 29. Oct. 2026. by Nicola Canale =
+  - Ported to Geant4 11 (g4root.hh removed, CMake >= 3.16), -s <seed> option.
+  - Tracker bar geometry from config.cfg (TRACKERBASE, TRACKERHEIGHT, TRACKERNBARS,
+    TRACKERLENGTH, TRACKERFRONTOFFSET): any number of bars per row; bars crossing
+    the central hole are found geometrically. Defaults reproduce the previous
+    geometry exactly (identical events with the same seed).
+  - Energy smearing, threshold, generator angle mode (GENANGLE) and beam file
+    (BEAMFILE) from config.cfg instead of sed on the sources. New PHOTOSTAT
+    smearing model (sigma_E/E proportional to 1/sqrt(E)).
+  - beam.in read once per thread and indexed by event ID: the test-beam runs
+    are now reproducible (the line used by an event depended on the threads).
+  - EMFLUCTUATION option to choose the Geant4 energy-loss fluctuation model.
+  - scripts/run_scan.sh, analysis/sith_reco.py (Python port of
+    Simulation_runner.cpp + Peak_fitter.py with configurable geometry,
+    validated against them), analysis/compare_ntuples.py.

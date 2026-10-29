@@ -11,7 +11,8 @@
 //////////////////////////////////////////////////
 //   Constructors and destructor                //
 //////////////////////////////////////////////////
-BT2017DetMap::BT2017DetMap()
+BT2017DetMap::BT2017DetMap(G4int nTrPerRow)
+	: m_NTrPerRow(nTrPerRow)
 {
   Init();
 }
@@ -178,41 +179,16 @@ void BT2017DetMap::Init()
   for ( int i = 0; i < 4; i++ ) 
     m_dEIDFromdEName[m_dENameFromdEID[i]] = i;
 
-  // creating Tracker map
-  m_TrNameFromTrID[0]   = "F_01"; //Fixed Column - Base facing the Beam
-  m_TrNameFromTrID[1]   = "F_02";
-  m_TrNameFromTrID[2]   = "F_03";
-  m_TrNameFromTrID[3]   = "F_04";
-  m_TrNameFromTrID[4]   = "F_05";
-  m_TrNameFromTrID[5]   = "F_06";
-  m_TrNameFromTrID[6]   = "F_07";
-  
-  m_TrNameFromTrID[7]   = "F_08"; //Fixed Column - Filpped
-  m_TrNameFromTrID[8]   = "F_09";
-  m_TrNameFromTrID[9]   = "F_10";
-  m_TrNameFromTrID[10]   = "F_11";
-  m_TrNameFromTrID[11]   = "F_12";
-  m_TrNameFromTrID[12]   = "F_13";
-  m_TrNameFromTrID[13]   = "F_14";
-  
-  m_TrNameFromTrID[14]   = "B_01"; //Moving Column - Base facing the Beam
-  m_TrNameFromTrID[15]   = "B_02";
-  m_TrNameFromTrID[16]   = "B_03";
-  m_TrNameFromTrID[17]   = "B_04";
-  m_TrNameFromTrID[18]   = "B_05";
-  m_TrNameFromTrID[19]   = "B_06";
-  m_TrNameFromTrID[20]   = "B_07";
-  
-  m_TrNameFromTrID[21]   = "B_08"; //Moving Column - Flipped
-  m_TrNameFromTrID[22]   = "B_09";
-  m_TrNameFromTrID[23]   = "B_10";
-  m_TrNameFromTrID[24]   = "B_11";
-  m_TrNameFromTrID[25]   = "B_12";
-  m_TrNameFromTrID[26]   = "B_13";
-  m_TrNameFromTrID[27]   = "B_14";
-
-  for ( int i = 0; i < 28; i++ ) 
+  // creating Tracker map: F_01..F_2N (fixed layer: N bars with base facing
+  // the beam, then N flipped), B_01..B_2N (moving layer, same order)
+  const G4int nLayer = 2 * m_NTrPerRow;
+  for ( int i = 0; i < 2 * nLayer; i++ )
+  {
+    char name[16];
+    snprintf(name, sizeof(name), "%s_%02d", i < nLayer ? "F" : "B", i % nLayer + 1);
+    m_TrNameFromTrID[i] = name;
     m_TrIDFromTrName[m_TrNameFromTrID[i]] = i;
+  }
 }
 
 

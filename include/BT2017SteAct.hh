@@ -16,11 +16,12 @@
 #include "BT2017DetMap.hh"
 
 class BT2017EveAct;
+class BT2017ConMan;
 
 class BT2017SteAct : public G4UserSteppingAction
 {
   public:
-	BT2017SteAct(BT2017EveAct* EA);
+	BT2017SteAct(BT2017EveAct* EA, BT2017ConMan* CM);
 	virtual ~BT2017SteAct();
 
 	virtual void UserSteppingAction(const G4Step*);

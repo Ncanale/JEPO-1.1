@@ -97,6 +97,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4double coud, couD, couT;
 	G4double scXL, scYL, scZL;
 	G4double trB, trH, trL, AlT, holX, holY, holZ, layT;
+	G4int trN;   // bars per row (4 rows: F, F flipped, B, B flipped)
 	std::vector<G4bool> trS;
 	G4double detE, detL, detG;
 	G4double detX, detY, detZ, detA;
@@ -164,7 +165,7 @@ class JePoDetCon : public G4VUserDetectorConstruction
 
 	// construction of tracker
   G4int  nTr = 0;
-	G4String			trName[28];
+	std::vector<G4String>			trName;
 	G4VSolid*	tracker_bar;
 	G4VSolid*	tracker_cover;
 	G4Box*						hole;
@@ -173,10 +174,10 @@ class JePoDetCon : public G4VUserDetectorConstruction
 	G4LogicalVolume*	tbarLV;
 	G4LogicalVolume*	holeLV;
 	G4LogicalVolume*	pLayLV;
-	G4ThreeVector		trPos[28];
+	std::vector<G4ThreeVector>		trPos;
 	G4ThreeVector		posH, pLayPosF, pLayPosB;
-	G4bool				trIsConstructed[28] = {false};
-	G4RotationMatrix* 	tRot[28];
+	std::vector<G4bool>				trIsConstructed;
+	std::vector<G4RotationMatrix*> 	tRot;
 	G4RotationMatrix* 	RotH;
   G4bool  trCon = 0; // 0: Parallel; 1: Perpendicular
 

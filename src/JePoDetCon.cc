@@ -87,10 +87,14 @@ void JePoDetCon::DefineDimensions()
 	// Tracker dimensions (It will measure Particle Position)
 	trS = m_CM -> GetTrSet(); // Setup
 	trCon = m_CM -> GetTrackerConfig(); // Setup
- 	trB = 60.0 * mm; // single prism dimensions
- 	trH = 20.0 * mm;
-  	//trL = 300.0 * mm;
- 	trL = 7 * trB;
+ 	trB = m_CM -> GetTrBase();   // single prism dimensions (default 60 x 20 mm)
+ 	trH = m_CM -> GetTrHeight();
+ 	trN = m_CM -> GetTrNBars();   // default 7
+ 	trL = m_CM -> GetTrLength();  // default trN * trB
+ 	trName.assign(4*trN, "");
+ 	trPos.assign(4*trN, G4ThreeVector());
+ 	trIsConstructed.assign(4*trN, false);
+ 	tRot.assign(4*trN, nullptr);
  	AlT =  0.01 * mm;
 	holX = 90.0 * mm;
 	holY = 90.0 * mm;
@@ -322,12 +326,12 @@ G4VPhysicalVolume* JePoDetCon::Construct()
 
   // construct trackers
   ConstructTracker();
-	for( int i = 0; i < 28; i++) PlanTracker(i, m_CM -> GetTranslate());
+	for( int i = 0; i < 4*trN; i++) PlanTracker(i, m_CM -> GetTranslate());
 
 	// Place them
-	for( int i = 0; i < 28; i++) if( trS[i] && trIsConstructed[i]) PlaceTracker(i,m_CM->GetTranslate());
+	for( int i = 0; i < 4*trN; i++) if( trS[i] && trIsConstructed[i]) PlaceTracker(i,m_CM->GetTranslate());
 	G4bool AtrS = 0;
-	for( int i = 0; i < 28; i++) AtrS = AtrS || trS[i];
+	for( int i = 0; i < 4*trN; i++) AtrS = AtrS || trS[i];
 	if(AtrS)
 	{
 		new G4PVPlacement(0, pLayPosF, "playF", pLayLV, labPV, false, 0);
@@ -653,10 +657,10 @@ void JePoDetCon::ConstructTracker()
 void JePoDetCon::PlanTracker(G4int trID, G4double translate)
 {	
 	// construct name of scintillator
-  nTr = (trID % 14 ? nTr : 0);
+  nTr = (trID % (2*trN) ? nTr : 0);
   //nTr = nTr + trS[trID];
   nTr = nTr + 1;
-	trName[trID] = (trID / 14 ? "B_" : "F_") + ((nTr>9 ? "" : "0") + G4UIcommand::ConvertToString(nTr));
+	trName[trID] = (trID / (2*trN) ? "B_" : "F_") + ((nTr>9 ? "" : "0") + G4UIcommand::ConvertToString(nTr));
   
 	// Define configuration for a structure
   G4double tanth = trH / (trB/2);
@@ -667,25 +671,26 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
   //G4double iO = (iH - AlT) / 2;
 
   int ff, fb, bf, bb;
-  ff = (1 - ((trID / 7) % 2)) * (1 - (trID / 14));
-  fb = ((trID / 7) % 2) * (1 - (trID / 14));
-  bf = (1 - ((trID / 7) % 2)) * (trID / 14);
-  bb = ((trID / 7) % 2) * (trID / 14);
+  ff = (1 - ((trID / trN) % 2)) * (1 - (trID / (2*trN)));
+  fb = ((trID / trN) % 2) * (1 - (trID / (2*trN)));
+  bf = (1 - ((trID / trN) % 2)) * (trID / (2*trN));
+  bb = ((trID / trN) % 2) * (trID / (2*trN));
 
   // Define position of tracker
   G4double posX, posY, posZ, f_off;
-  f_off = 21.1095; 
+  f_off = m_CM -> GetTrFrontOffset() / mm;   // default 21.1095
 //   f_off = 0; 
 // f_off = 20+1.336-0.038-0.122; 
   if(trCon)     //  For perpendicular configuration
   {
-    posX = translate * (ff + fb - bf - bb) + (-15 + (3.5 - (trID % 7) - bf*0.5) * (2*iB + trB)) * (bf + bb);
-    posY = (-15 + (3.5 - (trID % 7) - ff*0.5) * (2*iB + trB)) * (ff + fb);
+    // -trB/4 (= -15 mm for the prototype) centres the interleaved rows on the beam axis
+    posX = translate * (ff + fb - bf - bb) + (-trB/4 + (0.5*trN - (trID % trN) - bf*0.5) * (2*iB + trB)) * (bf + bb);
+    posY = (-trB/4 + (0.5*trN - (trID % trN) - ff*0.5) * (2*iB + trB)) * (ff + fb);
   }
   else          //  For parallel configuration
   {
     posX = 0;
-    posY = (3.5 - (trID % 7) - (ff + bf)*0.5) * (2*iB + trB) + (bf + bb)*translate + (ff + fb)*f_off;
+    posY = (0.5*trN - (trID % trN) - (ff + bf)*0.5) * (2*iB + trB) + (bf + bb)*translate + (ff + fb)*f_off;
   }
   posZ = detZ - (0.5 + ff + fb)*(iH + trH + AlT + 0.01) - 30.0;
   posH = G4ThreeVector(0, 0, detZ - (iH + trH + AlT + 0.01) - 30.0);
@@ -703,12 +708,19 @@ void JePoDetCon::PlanTracker(G4int trID, G4double translate)
 
 void JePoDetCon::PlaceTracker(G4int trID, G4double translate)
 {
-	G4bool cutH = (trID%14 == 2) || (trID%14 == 3) || (trID%14 == 10) || (trID%14 == 11);
+	// Cut the bars (with cover) overlapping the central hole: for the 60 mm
+	// prototype these are trID%14 = 2, 3, 10, 11. c is the bar centre along the
+	// measured coordinate, in the frame of its (translated) layer.
+	G4double tanth = trH / (trB/2);
+	G4double sinth = sqrt(1 - 1 / (1 + tanth*tanth));
+	G4double iB = AlT/tanth + AlT/sinth;
+	G4double c = (trID / (2*trN)) ? trPos[trID].x() + translate : trPos[trID].y();
+	G4bool cutH = std::abs(c) < holY/2 + trB/2 + iB;
 	//G4bool cutE = (trID%14 == 0) || (trID%14 == 6) || (trID%14 == 7) || (trID%14 == 13);
 	//G4bool split = (trID%14 == 3);
 	if(trCon && cutH)// || cutE)
 	{
-		G4ThreeVector trns((1 - 2*(trID / 14)) * translate, 0, 0);
+		G4ThreeVector trns((1 - 2*(trID / (2*trN))) * translate, 0, 0);
 		G4RotationMatrix i_rot = *tRot[trID];
 		trns = posH+trns-trPos[trID];
 		trns.transform(i_rot);

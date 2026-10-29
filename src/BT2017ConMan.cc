@@ -86,6 +86,7 @@ void BT2017ConMan::SetDefault()
   //m_movCol =   false;
   m_trCon =     1;
 	m_TrTrx = 	  0 * mm;
+	SetTrackerDefault();
 
   // Crystals
 	m_DetSet.assign(120, false);
@@ -103,12 +104,34 @@ void BT2017ConMan::SetDefault()
 	m_UseVBW =		  true;
 }
 
+// Keys added for the bar-size studies: also used by Load(), since a config
+// file written before them must keep the old (hard-coded) behaviour.
+void BT2017ConMan::SetTrackerDefault()
+{
+	// defaults = SiTH prototype (2018 test beam)
+	m_TrBase =   60.0 * mm;
+	m_TrHeight = 20.0 * mm;
+	m_TrNBars =   7;
+	m_TrLength =  0.0;          // <= 0 means NBars * Base
+	m_TrFOff =   21.1095 * mm;  // front layer shift in PARALLEL configuration
+	m_TrSmear =   0.22;         // relative FWHM of the energy smearing
+	m_TrPhotostat = false;      // true: sigma_E/E scales as 1/sqrt(E/SmearRef)
+	m_TrSmearRef = 0.0 * MeV;
+	m_TrThr =    35.0 * keV;
+	m_GenTheta = false;
+	m_UseBeamFile = false;
+	m_STrSet = "";
+	m_EmFluct = "";
+}
+
 
 //////////////////////////////////////////////////
 //   Load configuration file                    //
 //////////////////////////////////////////////////
 bool BT2017ConMan::Load(const char* fileName)
 {
+	SetTrackerDefault();
+
 	// Open file
 	std::ifstream file(fileName, std::ifstream::in);
 	if ( !file.is_open() ) return false;
@@ -334,19 +357,21 @@ bool BT2017ConMan::Load(const char* fileName)
 		{
 			char hfile[1000];
 			sscanf(line.data(), "TRACKERSETUP %s", hfile);
-			m_STrSet = hfile;
-			if ( m_STrSet.length() != 28 ) m_TrSet.assign(28, false);
-			else
-			{
-				int temp;
-				for ( int i = 0; i < 28; i++ )
-				{
-					temp = m_STrSet.data()[i];
-					if ( temp == 48 ) m_TrSet[i] = false;
-					else m_TrSet[i] = true;
-				}
-			}
+			m_STrSet = hfile;   // resolved after the loop, once TRACKERNBARS is known
 		}
+		std::string v;
+		if ( !(v = ValueOf(line, "TRACKERBASE")).empty() )      m_TrBase   = std::stod(v) * mm;
+		if ( !(v = ValueOf(line, "TRACKERHEIGHT")).empty() )    m_TrHeight = std::stod(v) * mm;
+		if ( !(v = ValueOf(line, "TRACKERNBARS")).empty() )     m_TrNBars  = std::stoi(v);
+		if ( !(v = ValueOf(line, "TRACKERLENGTH")).empty() )    m_TrLength = std::stod(v) * mm;
+		if ( !(v = ValueOf(line, "TRACKERFRONTOFFSET")).empty() ) m_TrFOff = std::stod(v) * mm;
+		if ( !(v = ValueOf(line, "TRACKERSMEARING")).empty() )  m_TrSmear  = std::stod(v);
+		if ( !(v = ValueOf(line, "TRACKERSMEARMODEL")).empty() ) m_TrPhotostat = (v == "PHOTOSTAT");
+		if ( !(v = ValueOf(line, "TRACKERSMEARREF")).empty() )  m_TrSmearRef = std::stod(v) * MeV;
+		if ( !(v = ValueOf(line, "TRACKERTHRESHOLD")).empty() ) m_TrThr    = std::stod(v) * MeV;
+		if ( !(v = ValueOf(line, "GENANGLE")).empty() )         m_GenTheta = (v == "THETA");
+		if ( !(v = ValueOf(line, "BEAMFILE")).empty() )         m_UseBeamFile = (v == "ON");
+		if ( !(v = ValueOf(line, "EMFLUCTUATION")).empty() )    m_EmFluct = v;
 		/*
 		if ( StartsWith(line, "FIXEDCOLUMN") )
 		{
@@ -477,6 +502,19 @@ bool BT2017ConMan::Load(const char* fileName)
 		}
 	}
 
+	// Tracker setup: one character per bar (4 rows of TRACKERNBARS), or ALL
+	const G4int nTr = GetTrNTotal();
+	m_TrSet.assign(nTr, false);
+	if ( m_STrSet == "ALL" ) m_TrSet.assign(nTr, true);
+	else if ( G4int(m_STrSet.length()) == nTr )
+		for ( G4int i = 0; i < nTr; i++ ) m_TrSet[i] = ( m_STrSet[i] != '0' );
+	else if ( !m_STrSet.empty() )
+		printf(" BT2017ConMan::Load() => WARNING: TRACKERSETUP has %zu bars, %d expected: all trackers OFF\n",
+		       m_STrSet.length(), nTr);
+	if ( m_TrPhotostat && m_TrSmearRef <= 0 )
+		G4Exception("BT2017ConMan::Load()", "JEPO001", FatalException,
+		            "TRACKERSMEARMODEL PHOTOSTAT needs TRACKERSMEARREF > 0");
+
 	PrintConfiguration();
 
 	return true;
@@ -524,6 +562,13 @@ void BT2017ConMan::PrintConfiguration()
 	//printf(" BT2017ConMan::Load() => MOVINGCOLUMN		        		%s\n", m_SmovCol.data());
 	printf(" BT2017ConMan::Load() => TRACKERCONFIG		        		%s\n", m_StrCon.data());
 	printf(" BT2017ConMan::Load() => TRANSLATE		        		%s\n", m_STrTrx.data());
+	printf(" BT2017ConMan::Load() => TRACKER base %g mm, height %g mm, %d bars/row, length %g mm\n",
+	       m_TrBase / mm, m_TrHeight / mm, m_TrNBars, GetTrLength() / mm);
+	printf(" BT2017ConMan::Load() => TRACKER smearing %g FWHM, model %s (ref %g MeV), threshold %g keV\n",
+	       m_TrSmear, m_TrPhotostat ? "PHOTOSTAT" : "CONSTANT", m_TrSmearRef / MeV, m_TrThr / keV);
+	printf(" BT2017ConMan::Load() => GENANGLE %s, BEAMFILE %s, EMFLUCTUATION %s\n",
+	       m_GenTheta ? "THETA" : "PHI", m_UseBeamFile ? "ON" : "OFF",
+	       m_EmFluct.empty() ? "(Geant4 default)" : m_EmFluct.data());
 	// Crystals	
 	printf(" BT2017ConMan::Load() => DETECTORSETUP      		%s\n", m_SDetSet.data());
 	printf(" BT2017ConMan::Load() => DETECTORPOSITIONX  		%s\n", m_SDetPoX.data());
@@ -639,6 +684,15 @@ G4bool BT2017ConMan::GetUseVBW() {return m_UseVBW;}
 //////////////////////////////////////////////////
 //   Test whether a line starts with ...        //
 //////////////////////////////////////////////////
+std::string BT2017ConMan::ValueOf(const std::string& line, const std::string& key)
+{
+	if ( !StartsWith(line, key) || line.length() == key.length() ) return "";
+	if ( line[key.length()] != ' ' && line[key.length()] != '\t' ) return "";
+	char hfile[1000] = "";
+	sscanf(line.data() + key.length(), "%999s", hfile);
+	return hfile;
+}
+
 bool BT2017ConMan::StartsWith(const std::string& text, const std::string& token)
 {
 	if ( text.length() < token.length() ) return false;

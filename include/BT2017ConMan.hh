@@ -107,6 +107,22 @@ class BT2017ConMan
 	G4bool GetTrackerConfig();
 	void SetTranslate(G4double translate);
 	G4double GetTranslate();
+	// Tracker bar geometry and readout
+	G4double GetTrBase()        { return m_TrBase; }
+	G4double GetTrHeight()      { return m_TrHeight; }
+	G4int    GetTrNBars()       { return m_TrNBars; }   // bars per row
+	G4int    GetTrNTotal()      { return 4 * m_TrNBars; }
+	G4double GetTrLength()      { return m_TrLength > 0 ? m_TrLength : m_TrNBars * m_TrBase; }
+	G4double GetTrFrontOffset() { return m_TrFOff; }
+	G4double GetTrSmear()       { return m_TrSmear; }
+	G4bool   GetTrPhotostat()   { return m_TrPhotostat; }
+	G4double GetTrSmearRef()    { return m_TrSmearRef; }
+	G4double GetTrThreshold()   { return m_TrThr; }
+	// Generator
+	G4bool   GetGenThetaScan()  { return m_GenTheta; }
+	G4bool   GetUseBeamFile()   { return m_UseBeamFile; }
+	// Physics: energy-loss fluctuation model ("" = Geant4 default, URBAN or UNIVERSAL)
+	std::string GetEmFluct()    { return m_EmFluct; }
 	// Set & get configurations: Crystals
 	void SetDetSet(std::vector<G4bool> detSet);
 	std::vector<G4bool> GetDetSet() ;
@@ -137,6 +153,9 @@ class BT2017ConMan
 
   private:
 	void SetDefault();
+	void SetTrackerDefault();
+	// Value of "KEY value" if line starts with key followed by blank, else ""
+	std::string ValueOf(const std::string& line, const std::string& key);
 
 	// Computing resource
 	std::string m_SUseMTD; G4bool   m_UseMTD;
@@ -180,6 +199,13 @@ class BT2017ConMan
 	//std::string m_SmovCol; G4bool m_movCol;
 	std::string m_StrCon; G4bool m_trCon;
 	std::string m_STrTrx; G4double m_TrTrx;
+	G4double m_TrBase, m_TrHeight, m_TrLength, m_TrFOff;
+	G4int    m_TrNBars;
+	G4double m_TrSmear, m_TrSmearRef, m_TrThr;
+	G4bool   m_TrPhotostat;
+	// Generator
+	G4bool   m_GenTheta, m_UseBeamFile;
+	std::string m_EmFluct;
 	// Crystals
 	std::string m_SDetSet; std::vector<G4bool> m_DetSet;
 	std::string m_SDetPoX; G4double m_DetPoX;

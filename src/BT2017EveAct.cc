@@ -40,7 +40,7 @@ void BT2017EveAct::BeginOfEventAction(const G4Event* /*anEvent*/)
 	m_EDepTr.clear();
 	for ( int i = 0; i < 120; i++ ) 	m_EDepCry[i]  = 0.0;
 	for ( int i = 0; i <   4; i++ ) 	 m_EDepdE[i]  = 0.0;		
-	for ( int i = 0; i <   28; i++ ) 	 m_EDepTr[i]  = 0.0;		
+	for ( int i = 0; i < m_CM -> GetTrNTotal(); i++ ) m_EDepTr[i] = 0.0;
 }
 
 //////////////////////////////////////////////////
@@ -79,10 +79,18 @@ void BT2017EveAct::EndOfEventAction(const G4Event* anEvent)
 		AM -> FillNtupleDColumn(iDet++, m_EDepdE[i]);
 	
 	// tracker bar filling
-  G4double Smear = 0.22;
-  G4double E_Th = 35.0 * keV; 
-	for(int i = 0; i < 28; i++)
-		AM -> FillNtupleDColumn(iDet++, (m_EDepTr[i] <= E_Th ? NaN : G4RandGauss::shoot(m_EDepTr[i],Smear*m_EDepTr[i]/2.355)));
+	// Smear is the relative FWHM. CONSTANT: sigma_E/E fixed; PHOTOSTAT: sigma_E/E
+	// scales as 1/sqrt(E) (photo-electron statistics) and equals Smear/2.355 at E = SmearRef
+  G4double Smear = m_CM -> GetTrSmear();
+  G4double E_Th = m_CM -> GetTrThreshold();
+  G4double ERef = m_CM -> GetTrSmearRef();
+  G4bool photostat = m_CM -> GetTrPhotostat();
+	for(int i = 0; i < m_CM -> GetTrNTotal(); i++)
+	{
+		G4double E = m_EDepTr[i];
+		G4double sigma = photostat ? Smear*std::sqrt(E*ERef)/2.355 : Smear*E/2.355;
+		AM -> FillNtupleDColumn(iDet++, (E <= E_Th ? NaN : G4RandGauss::shoot(E,sigma)));
+	}
 	
 	AM -> FillNtupleDColumn(iDet++, xcoor);
 	

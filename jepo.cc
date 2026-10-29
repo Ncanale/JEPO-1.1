@@ -39,6 +39,8 @@
 #include "QGSP_BERT.hh"
 #include "JediPhysicsListFactory.hh"
 #include "G4HadronicParameters.hh"
+#include "G4EmParameters.hh"
+#include "G4Version.hh"
 
 // ROOT
 //#include <TFile.h>
@@ -164,6 +166,17 @@ int main (int argc, char** argv)
 		PL -> SetVerboseLevel(0);
 		RM -> SetUserInitialization(PL);
 	}
+
+	// Energy-loss fluctuations: Geant4 11 rewrote G4UniversalFluctuation and kept
+	// the Geant4 10.7 model as "Urban" (the default for hadrons in 11.4)
+#if G4VERSION_NUMBER >= 1100
+	if ( BT2017CM -> GetEmFluct() == "URBAN" )
+		G4EmParameters::Instance() -> SetFluctuationType(fUrbanFluctuation);
+	else if ( BT2017CM -> GetEmFluct() == "UNIVERSAL" )
+		G4EmParameters::Instance() -> SetFluctuationType(fUniversalFluctuation);
+	else if ( !BT2017CM -> GetEmFluct().empty() )
+		G4Exception("main", "JEPO003", FatalException, "EMFLUCTUATION must be URBAN or UNIVERSAL");
+#endif
 
 	// User actions
 	G4HadronicParameters::Instance()->SetVerboseLevel(0);

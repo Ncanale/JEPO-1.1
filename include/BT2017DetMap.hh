@@ -17,7 +17,8 @@ class BT2017DetMap
 {
   public:
 	// Constructor and destructor
-	BT2017DetMap();
+	// nTrPerRow: tracker bars per row (4 rows: F up, F flipped, B up, B flipped)
+	BT2017DetMap(G4int nTrPerRow = 7);
 	~BT2017DetMap();
 
 	// Initializaion
@@ -41,6 +42,7 @@ class BT2017DetMap
 	std::map<G4String, G4int> m_dEIDFromdEName;
 
 	// naming for Trackers
+	G4int m_NTrPerRow;
 	std::map<G4int, G4String> m_TrNameFromTrID;
 	std::map<G4String, G4int> m_TrIDFromTrName;
 };
