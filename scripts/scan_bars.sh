@@ -89,7 +89,9 @@ for f in sorted(glob.glob(f"{d}/*/b*_h*/py_uniform.json")):
     rows.append(dict(model=model, base_mm=10 * g["Tb"], height_mm=10 * g["Tt"], bars_per_row=g["Tn"],
                      channels=4 * g["Tn"], sigma_theta_deg=r["sigma_theta_mean"], sigma_theta_err=r["sigma_theta_err"],
                      sigma_phi_A_deg=r["sigma_phi_A"], sigma_phi_A_err=r["sigma_phi_A_err"],
-                     sigma_pos_mm=r["sigma_pos_mm"], efficiency=r["efficiency"], n_events=r["n_events"]))
+                     sigma_r_mm=r["sigma_r_mm"], sigma_r_err=r["sigma_r_err"],
+                     sigma_rphi_mm=r["sigma_rphi_mm"], sigma_rphi_err=r["sigma_rphi_err"],
+                     efficiency=r["efficiency"], n_events=r["n_events"]))
 with open(f"{d}/summary.csv", "w", newline="") as fh:
     w = csv.DictWriter(fh, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
 print(f"{len(rows)} points -> {d}/summary.csv")

@@ -262,18 +262,36 @@ def analyse_tb(pattern, nruns, geom, pair=(3, 11), translate=TB_TRANSLATE):
 def analyse_uniform(pattern, geom, nbins=10, adjacent_only=False, run=0):
     """Event-by-event residuals for a run with uniform theta (run_scan.sh uniform).
 
-    In each theta bin the residual distribution is fitted with a Gaussian
-    (width around its own mean, i.e. like the fixed-theta scan). Returns
-    sigma_theta(theta), sigma_phi(theta), the A of sigma_phi = A cot(theta),
-    the effective transverse resolution at the front layer and the fraction
-    of events with a reconstructed track.
+    In each theta bin the residual distributions are fitted with a Gaussian
+    (width around their own mean, i.e. like the fixed-theta scan):
+
+    * angles, w.r.t. the generated direction: theta (polar) and phi (azimuthal)
+      in deg. They include the beam-spot term, as the reconstruction assumes the
+      vertex at the origin;
+    * position on the front-layer plane (z = dF), w.r.t. the true intersection
+      of the track (vertex from position_X/Y + generated direction): radial
+      r and azimuthal r*phi components, in mm. Files written before position_X/Y
+      held the true vertex contain the nominal beam axis, i.e. the beam spot
+      then ends up in the position residuals.
+
+    Returns the per-bin widths, their means, the A of sigma_phi = A cot(theta)
+    and the fraction of events with a reconstructed track.
     """
-    F, B, gen = load(run_files(pattern, run), geom)
+    F, B, gen = load(run_files(pattern, run), geom,
+                     extra=("theta_lab", "phi_lab", "position_X", "position_Y"))
     rec = reconstruct(F, B, geom, adjacent_only)
     th_gen = DEG * gen["theta_lab"]
     ph_gen = DEG * gen["phi_lab"]
     dth = rec["theta"] - th_gen
     dph = (rec["phi"] - ph_gen + 180) % 360 - 180
+    # true intersection with the front-layer plane, cm
+    t = np.tan(gen["theta_lab"])
+    xt = gen["position_X"] / 10 + geom.dF * t * np.cos(gen["phi_lab"])
+    yt = gen["position_Y"] / 10 + geom.dF * t * np.sin(gen["phi_lab"])
+    rt, pt = np.hypot(xt, yt), np.arctan2(yt, xt)
+    rr, pr = np.hypot(rec["xl"], rec["yl"]), np.arctan2(rec["yl"], rec["xl"])
+    dr = 10 * (rr - rt)                                              # mm
+    drphi = 10 * rt * ((pr - pt + np.pi) % (2 * np.pi) - np.pi)     # mm
     good = np.isfinite(dth)
     edges = np.linspace(th_gen.min(), th_gen.max(), nbins + 1)
     rows = []
@@ -281,7 +299,8 @@ def analyse_uniform(pattern, geom, nbins=10, adjacent_only=False, run=0):
         m = good & (th_gen >= lo) & (th_gen < hi)
         row = dict(theta=0.5 * (lo + hi), n=int(m.sum()),
                    eff=float(m.sum() / max(((th_gen >= lo) & (th_gen < hi)).sum(), 1)))
-        for name, res, s0 in (("theta", dth[m], 0.1), ("phi", dph[m], 1.0)):
+        for name, res, s0 in (("theta", dth[m], 0.1), ("phi", dph[m], 1.0),
+                              ("r", dr[m], 1.0), ("rphi", drphi[m], 1.0)):
             mad = 1.4826 * np.median(np.abs(res - np.median(res)))   # robust start
             s0 = mad if mad > 0 else s0
             p, e, _, _ = fit_peak(res, np.median(res), s0, half_width=5 * s0,
@@ -296,12 +315,12 @@ def analyse_uniform(pattern, geom, nbins=10, adjacent_only=False, run=0):
     w = 1 / sph_e ** 2
     A = float(np.sum(w * sph * cot) / np.sum(w * cot ** 2))   # weighted LSQ, sigma_phi = A cot
     A_err = float(1 / np.sqrt(np.sum(w * cot ** 2)))
-    sth = np.array([r["sigma_theta"] for r in rows])
-    return dict(per_bin=rows, sigma_theta_mean=float(sth.mean()),
-                sigma_theta_err=float(np.mean([r["sigma_theta_err"] for r in rows])),
+    mean = lambda k: float(np.mean([r[k] for r in rows]))
+    return dict(per_bin=rows,
+                sigma_theta_mean=mean("sigma_theta"), sigma_theta_err=mean("sigma_theta_err"),
                 sigma_phi_A=A, sigma_phi_A_err=A_err,
-                # transverse resolution at the front layer, mm
-                sigma_pos_mm=float(10 * geom.dF * np.radians(sth.mean())),
+                sigma_r_mm=mean("sigma_r"), sigma_r_err=mean("sigma_r_err"),
+                sigma_rphi_mm=mean("sigma_rphi"), sigma_rphi_err=mean("sigma_rphi_err"),
                 efficiency=float(good.mean()), n_events=int(good.size))
 
 
@@ -336,11 +355,13 @@ def main():
     elif a.mode == "uniform":
         res = analyse_uniform(a.runs, geom, adjacent_only=a.adjacent_only)
         for r in res["per_bin"]:
-            print(f"theta {r['theta']:5.2f}: sigma_theta {r['sigma_theta']:.4f}  "
-                  f"sigma_phi {r['sigma_phi']:.3f} deg  eff {r['eff']:.3f}")
+            print(f"theta {r['theta']:5.2f}: sigma_theta {r['sigma_theta']:.4f} deg  "
+                  f"sigma_phi {r['sigma_phi']:.3f} deg  sigma_r {r['sigma_r']:.3f} mm  "
+                  f"sigma_rphi {r['sigma_rphi']:.3f} mm  eff {r['eff']:.3f}")
         print(f"sigma_theta {res['sigma_theta_mean']:.4f} +- {res['sigma_theta_err']:.4f} deg, "
               f"sigma_phi = ({res['sigma_phi_A']:.4f} +- {res['sigma_phi_A_err']:.4f}) cot(theta) deg, "
-              f"sigma_pos {res['sigma_pos_mm']:.3f} mm, efficiency {res['efficiency']:.3f}")
+              f"sigma_r {res['sigma_r_mm']:.3f} mm, sigma_rphi {res['sigma_rphi_mm']:.3f} mm, "
+              f"efficiency {res['efficiency']:.3f}")
     else:
         res = analyse_tb(a.runs, a.nruns, geom)
         print(f"calibration {res['calib_mm_per_offset']:.3f} mm/offset")

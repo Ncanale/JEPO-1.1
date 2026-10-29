@@ -72,6 +72,10 @@ the outputs in ~/runs).
   - beam.in read once per thread and indexed by event ID: the test-beam runs
     are now reproducible (the line used by an event depended on the threads).
   - EMFLUCTUATION option to choose the Geant4 energy-loss fluctuation model.
+  - ntuple columns position_X/position_Y now hold the true event vertex (beam
+    spot included) instead of the nominal beam axis, so that the true hit
+    position is known; sith_reco.py uniform reports radial and azimuthal
+    position resolutions (mm) besides the polar and azimuthal angles.
   - scripts/run_scan.sh, analysis/sith_reco.py (Python port of
     Simulation_runner.cpp + Peak_fitter.py with configurable geometry,
     validated against them), analysis/compare_ntuples.py.

@@ -26,6 +26,7 @@ BT2017PriGenAct::BT2017PriGenAct(BT2017ConMan *CM)
 	m_BeamPX = m_CM->GetBeamAX();
 	m_BeamPY = m_CM->GetBeamAY();
 	m_BeamPZ = m_CM->GetBeamAZ();
+	m_GunPos = G4ThreeVector(m_BeamPX, m_BeamPY, m_BeamPZ);
 
 	m_BeamDX = m_CM->GetBeamDX();
 	m_BeamDY = m_CM->GetBeamDY();
@@ -212,20 +213,21 @@ G4double BT2017PriGenAct::GetPhi()
 //////////////////////////////////////////////////
 //                                              //
 //////////////////////////////////////////////////
-// returns the azimuth angle of particles momentum direction
+// returns the x of the event vertex (beam spot included; it used to return
+// the nominal beam axis, which made the true hit position unknown)
 G4double BT2017PriGenAct::GetPosX()
 {
-	return m_BeamPX;
+	return m_GunPos.x();
 }
 
 
 //////////////////////////////////////////////////
 //                                              //
 //////////////////////////////////////////////////
-// returns the azimuth angle of particles momentum direction
+// returns the y of the event vertex
 G4double BT2017PriGenAct::GetPosY()
 {
-	return m_BeamPY;
+	return m_GunPos.y();
 }
 
 //////////////////////////////////////////////////
