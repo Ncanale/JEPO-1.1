@@ -26,7 +26,7 @@
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 #include "G4Event.hh"
-#include "g4root.hh"
+#include "BT2017Ana.hh"   // g4root.hh removed in Geant4 11
 
 /*
 #include <TROOT.h>
