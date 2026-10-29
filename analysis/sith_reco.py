@@ -234,15 +234,28 @@ def analyse_tb(pattern, nruns, geom, pair=(3, 11), translate=TB_TRANSLATE):
         m = (qF == pair[0]) & (rF == pair[1]) & (qB >= 0)
         offsets.append(etaF[m] - etaB[m])
     allo = np.concatenate(offsets)
-    p0 = sum(([y / (np.sqrt(2 * np.pi) * 0.1), mu, 0.1]
-              for y, mu in zip(TB_YMAX[:nruns], TB_PEAKS[:nruns])), [])
+    # Same n-Gaussian fit of the summed histogram as Peak_fitter.py, but started
+    # from each step's own peak (Peak_fitter's fixed TB amplitudes only suit
+    # ~1e5 events per step: with more statistics the fit can lose some peaks)
+    width = 4 / 200
+    p0, single = [], []
+    for o in offsets:
+        med = np.median(o)
+        s = 1.4826 * np.median(np.abs(o - med))
+        p, _, _, _ = fit_peak(o, med, s, half_width=4 * s, bins=200, rng=(-2, 2))
+        single.append(abs(p[2]))
+        p0 += [o.size * width / (np.sqrt(2 * np.pi) * abs(p[2])), p[1], abs(p[2])]
     p, e, chi2, ndf = fit_hist(allo, 200, (-2, 2), p0, fit_range=(-1.55, 0.7))
     means, sig, sig_e = p[1::3], np.abs(p[2::3]), e[2::3]
     calib = (translate[nruns - 1] - translate[0]) / (means[-1] - means[0])  # mm / offset
+    if np.max(np.abs(means - np.array(p0[1::3]))) > 0.05:
+        print("WARNING: n-Gaussian fit moved a peak by > 0.05 from its step's own fit")
     return dict(calib_mm_per_offset=float(calib), means=means.tolist(),
+                amplitudes=p[0::3].tolist(),    # per 0.02 bin of the summed histogram
                 sigma_mm=(sig * calib).tolist(),
                 sigma_mm_mean=float(np.mean(sig * calib)),
                 sigma_mm_err_mean=float(np.mean(sig_e * calib)),
+                sigma_mm_single=(np.array(single) * calib).tolist(),
                 chi2ndf=float(chi2 / ndf))
 
 

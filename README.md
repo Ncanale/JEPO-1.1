@@ -32,6 +32,11 @@ geometry (TRACKERBASE, TRACKERHEIGHT, TRACKERNBARS, TRACKERLENGTH, TRACKERSETUP 
 or smearing model. scripts/analyse_original.sh runs the original ROOT tools
 (output/Simulation_runner.cpp, output/Peak_fitter.py) on the same output.
 
+scripts/scan_bars.sh runs the bar-size study (PHOTOSTAT calibration on the test
+beam, overlap checks, one uniform run per geometry); notebooks/ 01-03 show the
+validation of the port, the smearing calibration and the scan results (they read
+the outputs in ~/runs).
+
 ##################################################
 #   History                                      #
 ##################################################

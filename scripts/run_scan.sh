@@ -12,7 +12,8 @@
 # BEAMIN (reuse an existing beam.in for tb), NRUNS (limit number of runs),
 # PRECMD (UI commands before beamOn, e.g. '/process/eLoss/setFluctModel Urban').
 set -e
-build=$(realpath "$1"); out="$2"; mode="$3"; nev="$4"; keys="$5"
+build=$(realpath "$1"); out="$2"; mode="$3"; nev="$4"; keys="${5:+$(realpath "$5")}"
+[ -n "$BEAMIN" ] && BEAMIN=$(realpath "$BEAMIN")
 src=$(realpath "$(dirname "$0")/..")
 SEED0=${SEED0:-1000}
 NTHR=${NTHR:-$(nproc)}
