@@ -54,10 +54,11 @@ int main (int argc, char** argv)
 {
 	int option, flag_b = 0, flag_g = 0, flag_m = 0, flag_bz = 0, flag_by = 0, flag_ty = 0;
 
-	const char* optDic = "hbgm:c:z:y:t:"; // Option dictionary
-	
+	const char* optDic = "hbgm:c:z:y:t:s:"; // Option dictionary
+
 	char * macro;
     const char * config = "config.cfg";
+	long seed = time(NULL);   // overridden by -s for reproducible runs
 	
 	G4double GunZPos = 0;
 	G4double GunYPos = 0;
@@ -106,6 +107,9 @@ int main (int argc, char** argv)
                 flag_by = 1;
                 GunYPos = atof(optarg);
                 break;
+			case 's' :
+				seed = atol(optarg);
+				break;
 			case 't' :
 				flag_ty = 1;
 				std::cout << "tarYpos flag " << flag_ty << std::endl;
@@ -120,8 +124,8 @@ int main (int argc, char** argv)
 	// Randomizer
 	CLHEP::RanluxEngine defaultEngine(1234567, 4);
 	G4Random::setTheEngine(&defaultEngine);
-	G4int seed = time(NULL);
 	G4Random::setTheSeed(seed);
+	G4cout << "Random seed: " << seed << G4endl;
 
 	// Detect interactive mode (if any arguments) and define UI session
 	G4UIExecutive* UI = 0;

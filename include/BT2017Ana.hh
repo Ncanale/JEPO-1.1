@@ -12,7 +12,14 @@
 //                    - 21. Nov. 2017. Hoyong Jeong (hyjeong@hep.korea.ac.kr) //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "G4Version.hh"
+// g4root.hh was removed in Geant4 11: use the ROOT analysis manager directly
+#if G4VERSION_NUMBER >= 1100
+#include "G4RootAnalysisManager.hh"
+using G4AnalysisManager = G4RootAnalysisManager;
+#else
 #include "g4root.hh"
+#endif
 //#include "g4xml.hh"
 
 #endif

@@ -67,7 +67,10 @@ BT2017RunAct::BT2017RunAct(BT2017ConMan* CM)
 //////////////////////////////////////////////////
 BT2017RunAct::~BT2017RunAct()
 {
+	// Geant4 >= 11 owns and deletes the analysis manager itself
+#if G4VERSION_NUMBER < 1100
 	delete G4AnalysisManager::Instance();
+#endif
 }
 
 //////////////////////////////////////////////////
