@@ -115,7 +115,7 @@ class BT2017ConMan
 	G4double GetTrLength()      { return m_TrLength > 0 ? m_TrLength : m_TrNBars * m_TrBase; }
 	G4double GetTrFrontOffset() { return m_TrFOff; }
 	G4double GetTrSmear()       { return m_TrSmear; }
-	G4bool   GetTrPhotostat()   { return m_TrPhotostat; }
+	const std::string& GetTrSmearModel() { return m_TrSmearModel; }   // CONSTANT, PHOTOSTAT, NOISE
 	G4double GetTrSmearRef()    { return m_TrSmearRef; }
 	G4double GetTrThreshold()   { return m_TrThr; }
 	// Generator
@@ -202,7 +202,7 @@ class BT2017ConMan
 	G4double m_TrBase, m_TrHeight, m_TrLength, m_TrFOff;
 	G4int    m_TrNBars;
 	G4double m_TrSmear, m_TrSmearRef, m_TrThr;
-	G4bool   m_TrPhotostat;
+	std::string m_TrSmearModel;
 	// Generator
 	G4bool   m_GenTheta, m_UseBeamFile;
 	std::string m_EmFluct;

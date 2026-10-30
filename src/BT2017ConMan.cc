@@ -115,7 +115,7 @@ void BT2017ConMan::SetTrackerDefault()
 	m_TrLength =  0.0;          // <= 0 means NBars * Base
 	m_TrFOff =   21.1095 * mm;  // front layer shift in PARALLEL configuration
 	m_TrSmear =   0.22;         // relative FWHM of the energy smearing
-	m_TrPhotostat = false;      // true: sigma_E/E scales as 1/sqrt(E/SmearRef)
+	m_TrSmearModel = "CONSTANT"; // energy dependence of the smearing, see BT2017EveAct
 	m_TrSmearRef = 0.0 * MeV;
 	m_TrThr =    35.0 * keV;
 	m_GenTheta = false;
@@ -366,7 +366,7 @@ bool BT2017ConMan::Load(const char* fileName)
 		if ( !(v = ValueOf(line, "TRACKERLENGTH")).empty() )    m_TrLength = std::stod(v) * mm;
 		if ( !(v = ValueOf(line, "TRACKERFRONTOFFSET")).empty() ) m_TrFOff = std::stod(v) * mm;
 		if ( !(v = ValueOf(line, "TRACKERSMEARING")).empty() )  m_TrSmear  = std::stod(v);
-		if ( !(v = ValueOf(line, "TRACKERSMEARMODEL")).empty() ) m_TrPhotostat = (v == "PHOTOSTAT");
+		if ( !(v = ValueOf(line, "TRACKERSMEARMODEL")).empty() ) m_TrSmearModel = v;
 		if ( !(v = ValueOf(line, "TRACKERSMEARREF")).empty() )  m_TrSmearRef = std::stod(v) * MeV;
 		if ( !(v = ValueOf(line, "TRACKERTHRESHOLD")).empty() ) m_TrThr    = std::stod(v) * MeV;
 		if ( !(v = ValueOf(line, "GENANGLE")).empty() )         m_GenTheta = (v == "THETA");
@@ -511,9 +511,12 @@ bool BT2017ConMan::Load(const char* fileName)
 	else if ( !m_STrSet.empty() )
 		printf(" BT2017ConMan::Load() => WARNING: TRACKERSETUP has %zu bars, %d expected: all trackers OFF\n",
 		       m_STrSet.length(), nTr);
-	if ( m_TrPhotostat && m_TrSmearRef <= 0 )
+	if ( m_TrSmearModel != "CONSTANT" && m_TrSmearModel != "PHOTOSTAT" && m_TrSmearModel != "NOISE" )
+		G4Exception("BT2017ConMan::Load()", "JEPO002", FatalException,
+		            ("TRACKERSMEARMODEL " + m_TrSmearModel + ": CONSTANT, PHOTOSTAT or NOISE expected").data());
+	if ( m_TrSmearModel != "CONSTANT" && m_TrSmearRef <= 0 )
 		G4Exception("BT2017ConMan::Load()", "JEPO001", FatalException,
-		            "TRACKERSMEARMODEL PHOTOSTAT needs TRACKERSMEARREF > 0");
+		            ("TRACKERSMEARMODEL " + m_TrSmearModel + " needs TRACKERSMEARREF > 0").data());
 
 	PrintConfiguration();
 
@@ -565,7 +568,7 @@ void BT2017ConMan::PrintConfiguration()
 	printf(" BT2017ConMan::Load() => TRACKER base %g mm, height %g mm, %d bars/row, length %g mm\n",
 	       m_TrBase / mm, m_TrHeight / mm, m_TrNBars, GetTrLength() / mm);
 	printf(" BT2017ConMan::Load() => TRACKER smearing %g FWHM, model %s (ref %g MeV), threshold %g keV\n",
-	       m_TrSmear, m_TrPhotostat ? "PHOTOSTAT" : "CONSTANT", m_TrSmearRef / MeV, m_TrThr / keV);
+	       m_TrSmear, m_TrSmearModel.data(), m_TrSmearRef / MeV, m_TrThr / keV);
 	printf(" BT2017ConMan::Load() => GENANGLE %s, BEAMFILE %s, EMFLUCTUATION %s\n",
 	       m_GenTheta ? "THETA" : "PHI", m_UseBeamFile ? "ON" : "OFF",
 	       m_EmFluct.empty() ? "(Geant4 default)" : m_EmFluct.data());

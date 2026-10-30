@@ -32,10 +32,22 @@ geometry (TRACKERBASE, TRACKERHEIGHT, TRACKERNBARS, TRACKERLENGTH, TRACKERSETUP 
 or smearing model. scripts/analyse_original.sh runs the original ROOT tools
 (output/Simulation_runner.cpp, output/Peak_fitter.py) on the same output.
 
-scripts/scan_bars.sh runs the bar-size study (PHOTOSTAT calibration on the test
-beam, overlap checks, one uniform run per geometry); notebooks/ 01-03 show the
-validation of the port, the smearing calibration and the scan results (they read
-the outputs in ~/runs).
+scripts/scan_bars.sh runs the bar-size study (PHOTOSTAT and NOISE calibration on
+the test beam, overlap checks, one uniform run per geometry and smearing model);
+notebooks/ 01-04 show the validation of the port, the smearing calibration, the
+scan results and the light collection (they read the outputs in ~/runs).
+
+optical/ is a separate Geant4 application (sithopt) for the light collection of
+one triangular bar: optical photons emitted in an EJ-200 bar wrapped in Teflon,
+read out by 4 SiPMs (6x6 mm2) through a silicone pad, as on the 2018 boards:
+
+    cd optical && mkdir build && cd build && cmake -G Ninja .. && ninja
+    ./sithopt --base 60 --height 20 --length 420 --events 100000 --out b60_h20.root
+    optical/run_optical.sh ~/runs/optical                     # all geometries + systematics
+    python analysis/optical_summary.py ~/runs/optical --csv ~/runs/optical/summary.csv
+    OPTICAL_CSV=~/runs/optical/summary.csv scripts/scan_bars.sh ~/runs/scan_bars
+
+analysis/paper_figures.py writes the figures of the bar-size study for the paper.
 
 ##################################################
 #   History                                      #
@@ -76,6 +88,9 @@ the outputs in ~/runs).
     spot included) instead of the nominal beam axis, so that the true hit
     position is known; sith_reco.py uniform reports radial and azimuthal
     position resolutions (mm) besides the polar and azimuthal angles.
+  - NOISE smearing model (sigma_E independent of E, electronic noise).
+  - optical/: light-collection simulation of one bar (sithopt), used to scale
+    the photostatistics with the bar geometry (OPTICAL model of the scan).
   - scripts/run_scan.sh, analysis/sith_reco.py (Python port of
     Simulation_runner.cpp + Peak_fitter.py with configurable geometry,
     validated against them), analysis/compare_ntuples.py.

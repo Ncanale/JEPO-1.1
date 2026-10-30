@@ -80,15 +80,18 @@ void BT2017EveAct::EndOfEventAction(const G4Event* anEvent)
 	
 	// tracker bar filling
 	// Smear is the relative FWHM. CONSTANT: sigma_E/E fixed; PHOTOSTAT: sigma_E/E
-	// scales as 1/sqrt(E) (photo-electron statistics) and equals Smear/2.355 at E = SmearRef
+	// scales as 1/sqrt(E) (photo-electron statistics); NOISE: sigma_E fixed
+	// (electronic noise). PHOTOSTAT and NOISE equal CONSTANT at E = SmearRef
   G4double Smear = m_CM -> GetTrSmear();
   G4double E_Th = m_CM -> GetTrThreshold();
   G4double ERef = m_CM -> GetTrSmearRef();
-  G4bool photostat = m_CM -> GetTrPhotostat();
+  const std::string& model = m_CM -> GetTrSmearModel();
 	for(int i = 0; i < m_CM -> GetTrNTotal(); i++)
 	{
 		G4double E = m_EDepTr[i];
-		G4double sigma = photostat ? Smear*std::sqrt(E*ERef)/2.355 : Smear*E/2.355;
+		G4double sigma = model == "PHOTOSTAT" ? Smear*std::sqrt(E*ERef)/2.355
+		               : model == "NOISE"     ? Smear*ERef/2.355
+		               :                        Smear*E/2.355;
 		AM -> FillNtupleDColumn(iDet++, (E <= E_Th ? NaN : G4RandGauss::shoot(E,sigma)));
 	}
 	
