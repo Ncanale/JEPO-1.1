@@ -1,9 +1,11 @@
 #!/bin/bash
 # Run a JEPO scan with fixed seeds, replacing the source-editing logic of run.sh.
 #
-#   scripts/run_scan.sh <jepo-build-dir> <out-dir> <theta|tb|uniform> <events-per-run> [keys-file]
+#   scripts/run_scan.sh <jepo-build-dir> <out-dir> <theta|phi|tb|uniform> <events-per-run> [keys-file]
 #
 #   theta    full detector (PERPENDICULAR), one fixed theta per run (5..17.5 deg, 26 runs)
+#   phi      full detector, one fixed phi per run (0..337.5 deg in 22.5 deg steps,
+#            16 runs), theta uniform in [0.02, 0.3] rad (GENANGLE PHI)
 #   tb       2018 test-beam setup (PARALLEL), back layer moved in 7 steps
 #   uniform  full detector, one run with theta uniform in [MINTHETA, MAXTHETA]
 #
@@ -44,6 +46,12 @@ case $mode in
 		setkey TRACKERSETUP 1111111111111111111111111111
 		setkey GENANGLE THETA
 		setkey BEAMFILE OFF ;;
+	phi)
+		values=(0 22.5 45 67.5 90 112.5 135 157.5 180 202.5 225 247.5 270 292.5 315 337.5)
+		setkey TRACKERCONFIG PERPENDICULAR
+		setkey TRACKERSETUP 1111111111111111111111111111
+		setkey GENANGLE PHI
+		setkey BEAMFILE OFF ;;
 	uniform)
 		values=(uniform)
 		setkey TRACKERCONFIG PERPENDICULAR
@@ -78,7 +86,7 @@ nruns=${NRUNS:-${#values[@]}}
 for (( i=0; i<nruns; i++ )); do
 	v=${values[$i]}
 	case $mode in
-		theta) setkey MINTHETA "$v"; setkey MAXTHETA "$v" ;;
+		theta|phi) setkey MINTHETA "$v"; setkey MAXTHETA "$v" ;;
 		tb)    setkey TRANSLATE "$v" ;;
 	esac
 	"$build/jepo" -c config.cfg -m n_event.mac -s $((SEED0 + i)) > "run$i.log" 2>&1

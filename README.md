@@ -22,10 +22,18 @@ Reproducible scans without editing the sources (Geant4 11, see History):
 
     cmake -G Ninja -DWITH_GEANT4_UIVIS=OFF .. && ninja            # in build/
     scripts/run_scan.sh build out/theta theta 100000 [keys-file]   # theta scan, full detector
+    scripts/run_scan.sh build out/phi   phi   200000 [keys-file]   # phi scan, full detector
     scripts/run_scan.sh build out/tb    tb    100000 [keys-file]   # 2018 test-beam setup
     scripts/run_scan.sh build out/u     uniform 500000 [keys-file] # one run, theta uniform
-    python analysis/sith_reco.py theta|tb|uniform --runs 'out/theta/output/*MeV_t*-{run}.root' \
+    python analysis/sith_reco.py theta|phi|tb|uniform --runs 'out/theta/output/*MeV_t*-{run}.root' \
         --nruns 26 --geometry out/theta/config_last.cfg
+
+The tb analysis reports the width of the offset (etaF - etaB, in mm) and the
+single-layer resolution, width / sqrt(2). The phi analysis follows the thesis:
+sigma_phi of the tracks reaching the LYSO face at r0 = 12 cm, extrapolated as
+A cot(theta) with A = r0 sigma_phi / d; the uniform analysis instead fits
+A cot(theta) over the whole theta range with uniform phi (A is larger, since
+r0 = 12 cm is a favourable radius for the 16 scan directions).
 
 keys-file holds "KEY value" lines overriding config.cfg, e.g. a different bar
 geometry (TRACKERBASE, TRACKERHEIGHT, TRACKERNBARS, TRACKERLENGTH, TRACKERSETUP ALL)
@@ -94,3 +102,5 @@ analysis/paper_figures.py writes the figures of the bar-size study for the paper
   - scripts/run_scan.sh, analysis/sith_reco.py (Python port of
     Simulation_runner.cpp + Peak_fitter.py with configurable geometry,
     validated against them), analysis/compare_ntuples.py.
+  - phi scan (run_scan.sh phi, sith_reco.py phi) as in the thesis; tb analysis
+    also reports the single-layer resolution (offset width / sqrt(2)).

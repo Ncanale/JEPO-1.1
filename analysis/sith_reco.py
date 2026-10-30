@@ -9,6 +9,7 @@ ROOT macro (same pair selection, same formulas).
 
 Usage examples
   python sith_reco.py theta  --runs 'output/deuteronEmpty-270MeV_t*-{run}.root' --nruns 26
+  python sith_reco.py phi    --runs 'output/deuteronEmpty-270MeV_t*-{run}.root' --nruns 16
   python sith_reco.py tb     --runs 'output/deuteronEmpty-270MeV_t*-{run}.root' --nruns 7
   python sith_reco.py theta  --geometry output/geometry.json ...
 """
@@ -180,6 +181,7 @@ def fit_peak(values, center, sigma0, half_width=None, bins=None, rng=None):
 #   Analyses
 # --------------------------------------------------------------------------- #
 THETA_ARRAY = [5 + 0.5 * i for i in range(26)]
+PHI_ARRAY = [22.5 * i for i in range(16)]
 TB_TRANSLATE = [0.24739106414386924, 5.065845196500294, 10.152798578987705,
                 15.218870720097698, 20.038899210298244, 24.438954737516877,
                 28.93078785640231]
@@ -224,6 +226,35 @@ def analyse_theta(pattern, nruns, geom, thetas=THETA_ARRAY, adjacent_only=False,
     return out
 
 
+def analyse_phi(pattern, nruns, geom, phis=PHI_ARRAY, r0=12.0, d=66.0, half_width=0.25,
+                adjacent_only=False):
+    """phi scan: one fixed generated phi per run, theta uniform (run_scan.sh phi).
+
+    Thesis procedure: the phi width is taken for the tracks reaching the LYSO
+    face (distance d, cm) at radius r0 (cm), i.e. |theta - atan(r0/d)| < half_width
+    (deg), and extrapolated as sigma_phi(theta) = A cot(theta), A = r0 sigma_phi / d.
+    The error on A is the spread of the scan directions / sqrt(N).
+    """
+    th0 = DEG * np.arctan(r0 / d)
+    per_run = []
+    for k in range(nruns):
+        F, B, gen = load(run_files(pattern, k), geom)
+        rec = reconstruct(F, B, geom, adjacent_only)
+        th = DEG * gen["theta_lab"]
+        dph = (rec["phi"] - phis[k] + 180) % 360 - 180
+        m = np.isfinite(dph) & (np.abs(th - th0) < half_width)
+        res = dph[m]
+        s0 = 1.4826 * np.median(np.abs(res - np.median(res)))
+        p, e, chi2, ndf = fit_peak(res, np.median(res), s0, half_width=5 * s0, bins=200,
+                                   rng=(np.median(res) - 6 * s0, np.median(res) + 6 * s0))
+        per_run.append(dict(phi_gen=phis[k], sigma=abs(p[2]), sigma_err=e[2], n=int(m.sum()),
+                            A=abs(p[2]) * r0 / d))
+    A = np.array([r["A"] for r in per_run])
+    return dict(per_run=per_run, theta0=float(th0), r0_cm=r0, d_cm=d,
+                sigma_mean=float(np.mean([r["sigma"] for r in per_run])),
+                A=float(A.mean()), A_err=float(A.std(ddof=1) / np.sqrt(A.size)))
+
+
 def analyse_tb(pattern, nruns, geom, pair=(3, 11), translate=TB_TRANSLATE):
     """Test-beam-like PARALLEL analysis: offset = etaF - etaB for one F pair."""
     offsets = []
@@ -255,6 +286,8 @@ def analyse_tb(pattern, nruns, geom, pair=(3, 11), translate=TB_TRANSLATE):
                 sigma_mm=(sig * calib).tolist(),
                 sigma_mm_mean=float(np.mean(sig * calib)),
                 sigma_mm_err_mean=float(np.mean(sig_e * calib)),
+                # the offset is the difference of two layers: single layer = width / sqrt(2)
+                sigma_layer_mm=float(np.mean(sig * calib) / np.sqrt(2)),
                 sigma_mm_single=(np.array(single) * calib).tolist(),
                 chi2ndf=float(chi2 / ndf))
 
@@ -327,7 +360,7 @@ def analyse_uniform(pattern, geom, nbins=10, adjacent_only=False, run=0):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("mode", choices=["theta", "tb", "uniform"])
+    ap.add_argument("mode", choices=["theta", "phi", "tb", "uniform"])
     ap.add_argument("--runs", required=True,
                     help="glob pattern of per-thread files with {run} placeholder")
     ap.add_argument("--nruns", type=int, default=1)
@@ -352,6 +385,13 @@ def main():
               f"{res['sigma_err_mean']:.4f} deg")
         print(f"AVERAGE sigma (n-Gauss fit) : {res['multi_sigma_mean']:.4f} +- "
               f"{res['multi_sigma_err_mean']:.4f} deg  chi2/ndf {res['multi_chi2ndf']:.2f}")
+    elif a.mode == "phi":
+        res = analyse_phi(a.runs, a.nruns, geom, adjacent_only=a.adjacent_only)
+        for r in res["per_run"]:
+            print(f"phi {r['phi_gen']:6.1f}: sigma_phi {r['sigma']:.3f} +- {r['sigma_err']:.3f} deg  "
+                  f"A {r['A']:.4f} deg  (n={r['n']})")
+        print(f"r0 = {res['r0_cm']} cm (theta0 = {res['theta0']:.2f} deg): "
+              f"sigma_phi = ({res['A']:.4f} +- {res['A_err']:.4f}) cot(theta) deg")
     elif a.mode == "uniform":
         res = analyse_uniform(a.runs, geom, adjacent_only=a.adjacent_only)
         for r in res["per_bin"]:
@@ -366,7 +406,8 @@ def main():
         res = analyse_tb(a.runs, a.nruns, geom)
         print(f"calibration {res['calib_mm_per_offset']:.3f} mm/offset")
         print("sigma per step [mm]:", np.round(res["sigma_mm"], 3))
-        print(f"AVERAGE sigma: {res['sigma_mm_mean']:.3f} +- {res['sigma_mm_err_mean']:.3f} mm")
+        print(f"AVERAGE sigma: {res['sigma_mm_mean']:.3f} +- {res['sigma_mm_err_mean']:.3f} mm "
+              f"(offset width), {res['sigma_layer_mm']:.3f} mm per layer")
     res["geometry"] = asdict(geom)
     if a.json:
         with open(a.json, "w") as f:
